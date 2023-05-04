@@ -1,0 +1,71 @@
+---
+title: "Macroplastics Graphs"
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+date: "2023-01-09"
+---
+
+```{r}
+library(tidyverse)
+library(readxl)
+library(plotrix)
+macroplastics <- read_excel("~/Desktop/MB5001 Macroplastics Counts.xlsx")
+plastics_mass <- read_excel("~/Desktop/MB5001 Macroplastics Mass.xlsx")
+```
+
+
+```{r}
+plastics_summary <- macroplastics %>% 
+  group_by(Tidal_line, Site) %>% 
+  summarise(mean = mean(Count), std_error = std.error(Count))
+
+plastics_summary$Tidal_line = factor(plastics_summary$Tidal_line, levels = c('water', 'low', 'high', 'vegetation', 'grass'))
+
+ggplot(plastics_summary, aes(x = Tidal_line, y = mean)) +
+  geom_bar(stat = "identity") +
+  geom_errorbar(aes(ymin = mean - std_error, ymax = mean + std_error), width = 0.4, size = 0.4) +
+  labs(x = "Tidal line", y = "Mean debris count per site (+/- SE)") +
+  facet_wrap(~ Site) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+```{r}
+plastics_mass$Tidal_line = factor(plastics_mass$Tidal_line, levels = c('water', 'low', 'high', 'vegetation', 'grass'))
+
+ggplot(plastics_mass, aes(x = Tidal_line, y = `Total_weight_kg`)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~ Site) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90)) +
+  labs(x = "Tidal line", y = "Total weight of debris (kg)")
+```
+
+
+```{r}
+macroplastics$Tidal_line = factor(macroplastics$Tidal_line, levels = c('water', 'low', 'high', 'vegetation', 'grass'))
+
+macroplastics %>% 
+  ggplot() +
+  geom_bar(mapping = aes(fill = material, x = Tidal_line), na.rm = T, position = "fill") +
+  theme_classic() +
+  labs(x = "Tidal line", y = "Proportion of debris", fill = "Debris material")
+```
+
+```{r}
+macroplastics %>% 
+  ggplot() +
+  geom_bar(mapping = aes(fill = category, x = Tidal_line), na.rm = T, position = "fill") +
+  theme_classic() +
+  labs(x = "Tidal line", y = "Proportion of debris", fill = "Source of debris")
+```
+
+
+
+
+
+
+
+

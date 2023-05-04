@@ -1,0 +1,113 @@
+---
+title: "Abundance shit"
+output: html_document
+date: "2022-09-20"
+---
+
+
+Try a log or sqrt transformation and see if there's homogeneity of variances (Levine test or look at boxplots)
+
+
+```{r}
+
+hist(snail_count2$sqrtcount)
+
+qqnorm(snail_count2$sqrtcount)
+qqline(snail_count2$sqrtcount)
+
+shapiro.test(snail_count2$sqrtcount)
+
+```
+
+
+```{r}
+
+hist(snail_count2$logcount)
+
+qqnorm(snail_count2$logcount)
+qqline(snail_count2$logcount)
+
+shapiro.test(snail_count2$logcount)
+
+
+
+```
+
+
+
+```{r}
+anova_output <- aov(count~Zone*Site, data = snail_count2)
+
+summary(anova_output)
+
+plot(anova_output)
+```
+ 
+1. log transform the data
+2. Residuals plot (resids?) and run levene's test
+3. 
+
+Turn into a table
+The effects of zone depends on site and vice versa (that's the 3rd p-value)
+
+
+use transformed data to run a 2-way anova
+resids shows 4 plots 
+
+```{r}
+library(tidyverse)
+ggplot(snail_count, aes(x = reorder(Zone_Site, order), y = mean)) +
+  geom_bar(stat = "identity", aes(fill = Site)) +
+  geom_errorbar(aes(ymin = mean - st_error, ymax = mean + st_error), width = 0.4, size = 0.4) +
+  labs(x = "Intertidal zone", y = "Mean gastropod count per quadrat (+/- SE)") +
+  scale_fill_grey(start = 0.4, end = 0.7)
+```
+
+
+
+
+
+```{r}
+
+# Mann-Whitney U Test for Mean Abundance by Site (N/S)
+wilcox.test(count ~ Site, data = snail_count2)
+# p < 0.05 --> reject the null that there is no difference in size between the two sites (N/S)
+# Sufficient evidence to conclude that there is a significant difference in size between the two sites (N/S)
+
+
+# Kruskal-Wallis Test for Mean Abundance by Zones (Low/Mid/High)
+kruskal.test(count ~ Zone, data = snail_count2)
+
+```
+
+
+
+
+```{r}
+
+# Mean abundance North
+
+mean_north <- subset(snail_count2, Site == "North")
+
+hist(mean_north$count)
+
+
+# Mean abundance South
+
+mean_south <- subset(snail_count2, Site == "South")
+
+hist(mean_south$count)
+
+
+
+```
+
+
+
+
+
+
+
+
+
+

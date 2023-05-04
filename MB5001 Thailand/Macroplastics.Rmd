@@ -1,0 +1,74 @@
+---
+title: "Macroplastics"
+output:
+  word_document: default
+  pdf_document: default
+  html_document: default
+date: "2023-01-07"
+---
+
+
+```{r}
+library(tidyverse)
+library(readxl)
+library(plotrix)
+macroplastics <- read_excel("~/Desktop/MB5001 Macroplastics Counts.xlsx")
+```
+
+For average count per site with standard error bars:
+
+```{r}
+site_summary <- macroplastics %>% 
+  group_by(Site) %>% 
+  summarise(mean = mean(Count), std_error = std.error(Count))
+
+ggplot(site_summary, aes(x = Site, y = mean)) +
+  geom_bar(stat = "identity") +
+  geom_errorbar(aes(ymin = mean - std_error, ymax = mean + std_error), width = 0.4, size = 0.4) +
+  labs(x = "Site", y = "Mean rubbish count per tidal line (+/- SE)")
+```
+
+
+For average count per tidal line with standard error bars:
+
+```{r}
+tidal_summary <- macroplastics %>% 
+  group_by(Tidal_line) %>% 
+  summarise(mean = mean(Count), std_error = std.error(Count))
+
+tidal_summary$Tidal_line = factor(tidal_summary$Tidal_line, levels = c('water', 'low', 'high', 'vegetation', 'grass'))
+
+
+ggplot(tidal_summary, aes(x = Tidal_line, y = mean)) +
+  geom_bar(stat = "identity") +
+  geom_errorbar(aes(ymin = mean - std_error, ymax = mean + std_error), width = 0.4, size = 0.4) +
+  labs(x = "Tidal line", y = "Mean rubbish count (+/- SE)")
+```
+
+
+
+For average count per tidal line with standard error bars, separated by site:
+
+```{r}
+plastics_summary <- macroplastics %>% 
+  group_by(Tidal_line, Site) %>% 
+  summarise(mean = mean(Count), std_error = std.error(Count))
+
+plastics_summary$Tidal_line = factor(plastics_summary$Tidal_line, levels = c('water', 'low', 'high', 'vegetation', 'grass'))
+
+ggplot(plastics_summary, aes(x = Tidal_line, y = mean)) +
+  geom_bar(stat = "identity") +
+  geom_errorbar(aes(ymin = mean - std_error, ymax = mean + std_error), width = 0.4, size = 0.4) +
+  labs(x = "Tidal line", y = "Mean rubbish count per tidal line per site (+/- SE)") +
+  facet_wrap(~ Site)
+```
+
+
+
+
+
+
+
+
+
+

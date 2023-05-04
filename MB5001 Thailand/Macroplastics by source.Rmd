@@ -1,0 +1,81 @@
+---
+title: "Macroplastics by source"
+output:
+  word_document: default
+  html_document: default
+date: "2023-01-07"
+---
+
+```{r}
+library(tidyverse)
+library(readxl)
+library(plotrix)
+macroplastics <- read_excel("~/Desktop/MB5001 Macroplastics Counts.xlsx")
+
+```
+
+
+```{r}
+macroplastics %>% 
+  ggplot() +
+  geom_bar(mapping = aes(fill = category, x = Tidal_line), na.rm = T) +
+  ggtitle("Source of debris separated by tidal zone (abundance)") +
+  theme_classic()
+```
+
+
+```{r}
+macroplastics %>% 
+  ggplot() +
+  geom_bar(mapping = aes(fill = category, x = Tidal_line), na.rm = T, position = "fill") +
+  ggtitle("Source of debris (percentage) separated by tidal zone") +
+  theme_classic()
+```
+
+```{r}
+macroplastics %>% 
+  ggplot() +
+  geom_bar(mapping = aes(fill = category, x = Site), na.rm = T) +
+  ggtitle("Source of debris separated by site (abundance)") +
+  theme_classic()
+```
+
+```{r}
+macroplastics %>% 
+  ggplot() +
+  geom_bar(mapping = aes(fill = category, x = Site), na.rm = T, position = "fill") +
+  ggtitle("Source of debris (percentage) separated by site") +
+  theme_classic()
+```
+
+```{r}
+macroplastics %>% 
+  ggplot() +
+  geom_bar(mapping = aes(fill = category, x = Tidal_line), na.rm = T, position = "fill") +
+  ggtitle("Source of debris (percentage) separated by tidal zone") +
+  facet_wrap(~ Site) +
+  theme_classic()
+```
+
+
+For average count for each source with standard error bars:
+
+```{r}
+category_summary <- macroplastics %>% 
+  group_by(category) %>% 
+  summarise(mean = mean(Count), std_error = std.error(Count))
+
+ggplot(category_summary, aes(x = category, y = mean)) +
+  geom_bar(stat = "identity") +
+  geom_errorbar(aes(ymin = mean - std_error, ymax = mean + std_error), width = 0.4, size = 0.4) +
+  labs(x = "Source/category", y = "Mean rubbish count (+/- SE)") +
+  theme_classic()
+```
+
+
+
+
+
+
+
+

@@ -1,0 +1,31 @@
+---
+title: "Macroplastics Mass"
+output: html_document
+date: "2023-01-08"
+---
+
+```{r}
+library(tidyverse)
+library(readxl)
+library(plotrix)
+plastics_mass <- read_excel("~/Desktop/MB5001 Macroplastics Mass.xlsx")
+```
+
+```{r}
+ggplot(plastics_mass, aes(x = `Tidal line`, y = `Total weight (kg)`)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~ Site) +
+  theme_classic()
+```
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,64 @@
+---
+title: "Diversity"
+output: html_document
+date: "2022-09-21"
+---
+
+```{r}
+snails %>% 
+  group_by(Site, Species) %>% 
+  summarise(count = n())
+```
+
+
+```{r}
+snails %>% 
+  group_by(Zone, Species) %>% 
+  summarise(count = n())
+```
+
+
+
+
+
+# Simpson's S for N vs. S
+
+```{r}
+
+diversity_north <- subset(diversity, Site == "North") %>% 
+  na.omit()
+
+sum(diversity_north$count)
+
+diversity_north <- mutate(diversity_north, proportion = (count/1231)^2)
+
+1 - sum(diversity_north$proportion)
+
+```
+
+
+
+```{r}
+
+diversity_south <- subset(diversity, Site == "South") %>% 
+  na.omit()
+
+sum(diversity_south$count)
+
+diversity_south <- mutate(diversity_south, proportion = (count/264)^2)
+
+1 - sum(diversity_south$proportion)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+

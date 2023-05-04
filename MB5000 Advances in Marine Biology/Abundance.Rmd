@@ -1,0 +1,103 @@
+---
+title: "Abundance"
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+date: "2022-09-21"
+---
+
+```{r}
+library(tidyverse)
+snails <- read.csv("~/Desktop/Advances in Marine Biology/All Snail Data.csv")
+snail_count2 <- snails %>% 
+  group_by(Zone, Site, Zone_Site, Transect, Quadrat) %>% 
+  summarize(count = n())
+
+library(car)
+```
+
+
+
+```{r}
+# 2-way ANOVA for count data (not transformed)
+aov_count <- aov(count~Zone*Site, data = snail_count2)
+summary(aov_count)
+plot(aov_count)
+
+# Levene's test
+leveneTest(count~Zone*Site, data = snail_count2)
+
+```
+
+
+
+```{r}
+
+# 2-way ANOVA for log-transformed count data
+snail_count2$logcount <- log(snail_count2$count)
+aov_log_count <- aov(logcount~Zone*Site, data = snail_count2)
+summary(aov_log_count)
+plot(aov_log_count)
+
+# Levene's test
+leveneTest(logcount~Zone*Site, data = snail_count2)
+
+
+```
+
+look at boxplot of log-transfromed abundance (variance)
+
+
+```{r}
+# 2-way ANOVA for sqrt-transformed count data
+snail_count2$sqrtcount <- sqrt(snail_count2$count)
+aov_sqrt_count <- aov(sqrtcount~Zone*Site, data = snail_count2)
+summary(aov_sqrt_count)
+plot(aov_sqrt_count)
+
+# Levene's test
+leveneTest(sqrtcount~Zone*Site, data = snail_count2)
+```
+
+
+
+```{r}
+library(tidyverse)
+ggplot(snail_count, aes(x = reorder(Zone, order), y = mean)) +
+  geom_bar(stat = "identity", aes(fill = Site)) +
+  geom_errorbar(aes(ymin = mean - st_error, ymax = mean + st_error), width = 0.4, size = 0.4) +
+  labs(x = "Intertidal zone", y = "Mean gastropod count per quadrat (+/- SE)") +
+  scale_fill_grey(start = 0.4, end = 0.7) +
+  facet_wrap(~Site)
+```
+
+
+```{r}
+
+snails %>% 
+  group_by(Zone, Site, Zone_Site, Transect, Quadrat) %>% 
+  summarize(count = n()) %>% 
+  group_by(Zone) %>% 
+  summarise(mean = mean(count))
+
+```
+
+
+
+```{r}
+
+snails %>% 
+  group_by(Zone, Site, Zone_Site, Transect, Quadrat) %>% 
+  summarize(count = n()) %>% 
+  group_by(Site) %>% 
+  summarise(mean = mean(count))
+
+```
+
+
+
+
+
+
+

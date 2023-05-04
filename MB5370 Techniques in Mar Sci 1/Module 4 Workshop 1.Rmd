@@ -1,0 +1,374 @@
+---
+title: "MB5370 Module 4: Data Science"
+author: Katya Jagolta
+affiliation: James Cook University
+output: html_document
+date: "2023-05-02"
+---
+
+Workspace: 
+~/MB5370 Techniques in Mar Sci 1/MB5370 Module 4.Rmd
+
+## Learning outcomes:
+1. Learning plotting in detail using ggplot2
+2. Learning reproducible science with Git/Github
+3. Tidy data principles using tidyr
+4. Mapping in R
+
+
+# Workshop 1: Dataviz in R
+
+```{r}
+library(tidyverse)
+```
+
+## 2.5 Look at the mpg data
+
+```{r}
+mpg
+```
+
+## 2.6-2.7 Create a plot with the mpg data
+
+```{r}
+ggplot(data = mpg) +
+  geom_point(mapping = aes(x = displ, y = hwy, color = class)) +
+  labs(x = "Engine size (L)", y = "Fuel efficiency (mpg)")
+```
+This graph has engine size on the x-axis, fuel efficiency on the y-axis, and point color correlates to the class/type of car.
+
+
+What happens if you map an aesthetic to something other than a variable name?
+
+```{r}
+ggplot(data = mpg) +
+  geom_point(mapping = aes(x = displ, y = hwy, color = displ < 5)) +
+  labs(x = "Engine size (L)", y = "Fuel efficiency (mpg)")
+```
+
+This changes the color of the points based on whether the engine size is greater than or less than 5 L. 
+
+
+## 2.8 Troubleshooting
+
+```{r}
+# ggplot(data = mpg) 
+# + geom_point(mapping = aes(x = displ, y = hwy)) 
+# the = should be on top line
+
+# Fixed:
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy))  +
+  labs(x = "Engine size (L)", y = "Fuel efficiency (mpg)")
+```
+
+## 2.9 Facet and panel plots
+
+Facet the plot using a single variable (car class/type): facet_wrap(). Nrow() dictates how many rows of graphs there are (2). Ncol(2) would return two columns of graphs rather than 2 rows.
+
+```{r}
+ggplot(data = mpg) +
+  geom_point(mapping = aes(x = displ, y = hwy)) +
+  facet_wrap(~ class, nrow = 2) +
+  labs(x = "Engine size (L)", y = "Fuel efficiency (mpg)")
+```
+
+
+Facet the plot using more than one variable (# of cylinders and drive train type): facet_grid()
+
+```{r}
+ggplot(data = mpg) +
+  geom_point(mapping = aes(x = displ, y = hwy)) +
+  facet_grid(drv ~ cyl) +
+  labs(x = "Engine size (L)", y = "Fuel efficiency (mpg)")
+```
+
+
+## 2.10 Fitting simple lines
+
+```{r}
+ggplot(data = mpg) +
+#   geom_point(mapping = aes(x = displ, y = hwy))  # points are messy
+  geom_smooth(mapping = aes(x = displ, y = hwy)) + # line is nice & smooth
+  labs(x = "Engine size (L)", y = "Fuel efficiency (mpg)")
+```
+
+
+Set the group aesthetic to a categorical variable to draw multiple objects:
+```{r}
+ ggplot(data = mpg) +
+  geom_smooth(mapping = aes(x = displ, y = hwy, group = drv))
+```
+
+Change the color of each line based on the drv value:
+```{r}
+ ggplot(data = mpg) +
+  geom_smooth(mapping = aes(x = displ, y = hwy, color = drv))
+```
+
+Separate cars into 3 line types and point colors based on drive type: this looks very messy and is probably not the best way to display the data, but shows that each line comes from different data points (i.e. different drive train types).
+```{r}
+ggplot(data = mpg) + 
+  geom_smooth(mapping = aes(x = displ, y = hwy, linetype = drv, color = drv)) +
+  geom_point(mapping = aes(x = displ, y = hwy, color = drv))  +
+  labs(x = "Engine size (L)", y = "Fuel efficiency (mpg)")
+```
+
+More efficent way to write that code: put the x, y, and color in the ggplot() line rather than in both geom_point() and geom_smooth()
+```{r}
+ggplot(data = mpg, mapping = aes(x = displ, y = hwy, linetype = drv, color = drv)) + 
+  geom_smooth() +
+  geom_point() +
+  labs(x = "Engine size (L)", y = "Fuel efficiency (mpg)")
+```
+
+To specify aesthetics in one layer but not another: geom_smooth uses the information within ggplot(); geom_point() uses that information as well as the additional aesthetics of changing color based on class
+```{r}
+ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) +
+  geom_point(mapping = aes(color = class)) +
+  geom_smooth() +
+  labs(x = "Engine size (L)", y = "Fuel efficiency (mpg)")
+```
+
+Can also specify different data for each layer: here we use filter() and (class == "subcompact") to plot only a subset of the data. This one shows points for all classes, but the smooth line only represents data for subcompact vehicles. I probably wouldn't use this exact plot, but this might be helpful with other datasets. 
+```{r}
+ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) +
+  geom_point(mapping = aes(color = class)) +
+  geom_smooth(data = filter(mpg, class == "subcompact"), se = FALSE) + # se = FALSE leaves out the standard error shading
+  labs(x = "Engine size (L)", y = "Fuel efficiency (mpg)")
+```
+
+Exercise:
+1. Geoms for line chart, boxplot, histogram, and an area chart.
+
+Line chart: not particularly helpful for this data
+```{r}
+ggplot(data = mpg, mapping = aes(x = displ, y = hwy, color = class)) +
+  geom_line() +
+  labs(x = "Engine size (L)", y = "Fuel efficiency (mpg)")
+```
+
+
+Boxplot:
+```{r}
+ggplot(data = mpg, mapping = aes(x = displ, y = hwy, color = class)) +
+  geom_boxplot() +
+  labs(x = "Engine size (L)", y = "Fuel efficiency (mpg)")
+```
+
+Histogram:
+```{r}
+ggplot(data = mpg, mapping = aes(hwy)) +
+  geom_histogram() +
+  labs(x = "Fuel efficiency (mpg)", y = "Frequency")
+```
+
+Area chart: not very useful for this data
+```{r}
+ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) +
+  geom_area() +
+  labs(x = "Engine size (L)", y = "Fuel efficiency (mpg)")
+```
+
+
+2 & 3. Predict what the code below will look like and then check.
+I believe these two will look the same.
+
+```{r}
+ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) + 
+  geom_point() + 
+  geom_smooth()
+
+ggplot() + 
+  geom_point(data = mpg, mapping = aes(x = displ, y = hwy)) + 
+  geom_smooth(data = mpg, mapping = aes(x = displ, y = hwy))
+```
+And they do!
+
+
+## 2.11 Transformations and Stats
+
+Easy transformations & data summaries using the dataset 'diamonds' which includes price, carat, color, clarity, & cut of each diamond
+
+The following shows that there are many more diamonds of high quality than low quality. By not specifying a y-value, ggplot counted the number of diamonds of each cut and plotted that.
+```{r}
+ggplot(data = diamonds) +
+  geom_bar(mapping = aes(x = cut))
+```
+
+Can generally use geoms and stats interchangeably: here, stat_count() instead of geom_bar() does the same thing
+```{r}
+ggplot(data = diamonds) +
+  stat_count(mapping = aes(x = cut))
+```
+
+Can override the default stat: stat = "identity" tells ggplot to use the raw values of variables rather than making default stats (a count or summary)
+```{r}
+demo <- tribble(
+  ~cut,         ~freq,
+  "Fair",       1610,
+  "Good",       4906,
+  "Very Good",  12082,
+  "Premium",    13791,
+  "Ideal",      21551
+)
+demo
+
+ggplot(data = demo) +
+  geom_bar(mapping = aes(x = cut, y = freq), stat = "identity")
+```
+
+
+Can also override a default mapping from transformed variables to aesthetics. E.g.: display a proportion of the total rather than a count
+```{r}
+ggplot(data = diamonds) +
+  geom_bar(mapping = aes(x = cut, y = stat(prop), group = 1)) +
+  labs(x = "Cut", y = "Proportion of all diamonds")
+```
+
+Can also show more information about the transformation: this shows the median, maximum, and minimum depth for each cut.
+```{r}
+ggplot(data = diamonds) +
+  stat_summary(
+    mapping = aes(x = cut, y = depth),
+    fun.min = min,
+    fun.max = max, 
+    fun = median
+  )
+```
+
+Need to set group = 1 in proportion charts, otherwise this will happen: the data are (by default) grouped by cut, so the proportion of Fair in Fair is 100%, the proportion of Good in Good is 100%, etc. rather than the proportion of each cut out of all diamonds of all cuts.
+```{r}
+ggplot(data = diamonds) + 
+  geom_bar(mapping = aes(x = cut, y = after_stat(prop)))
+ggplot(data = diamonds) + 
+  geom_bar(mapping = aes(x = cut, fill = color, y = after_stat(prop)))
+```
+
+Group = 1 overrides the default behavior which is to group by the x variable (cut), so now the proportions of each cut are relative to all diamonds of all cuts.
+```{r}
+ggplot(data = diamonds) + 
+  geom_bar(mapping = aes(x = cut, y = after_stat(prop), group = 1))
+
+ggplot(data = diamonds) + 
+  geom_bar(mapping = aes(x = cut, y = after_stat(prop), fill = color, group = 1))
+```
+
+## 2.12 Positional adjustments
+
+Change outline or fill of bars based on a variable: in this case there are separate colors for each cut
+```{r}
+ggplot(data = diamonds) +
+  geom_bar(mapping = aes(x = cut, color = cut))
+
+ggplot(data = diamonds) +
+  geom_bar(mapping = aes(x = cut, fill = cut))
+```
+
+Change color to a different variable: clarity
+```{r}
+ggplot(data = diamonds) +
+  geom_bar(mapping = aes(x = cut, fill = clarity))
+```
+
+
+Position adjustments allow you to customize plots in 3 ways:
+- identity (raw data)
+- fill (changes heights)
+- dodge (forces ggplot2 to not put things on top of each other)
+- jitter (slightly moves points so you can see them all)
+
+
+Position = "identity": allows you to place each object exactly where it falls in the context of the graph
+- Vital for point charts like scatter plots
+- Horrible for bar plots - shows too much information when bar plots usually summarize information
+
+```{r}
+#To alter transparency (alpha)
+ggplot(data = diamonds, mapping = aes(x = cut, fill = clarity)) +
+  geom_bar(alpha = 1/5, position = "identity")
+
+#To color the bar outlines with no fill color
+ggplot(data = diamonds, mapping = aes(x = cut, colour = clarity)) + 
+  geom_bar(fill = NA, position = "identity")
+```
+
+Position = "fill": stacks, but makes each set of stacked bars the same height to show proportions of each clarity level
+```{r}
+ggplot(data = diamonds) + 
+  geom_bar(mapping = aes(x = cut, fill = clarity), position = "fill")
+```
+
+Position = "dodge": places overlapping objects directly beside one another
+```{r}
+ggplot(data = diamonds) + 
+  geom_bar(mapping = aes(x = cut, fill = clarity), position = "dodge")
+```
+
+
+Position = "jitter": slightly moves points so you can see them all; adds a small amount of random noise to each point to avoid overplotting when points overlap 
+```{r}
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy), position = "jitter")
+```
+
+
+## 2.13 The layered grammar of graphics
+
+Template for ggplot2:
+
+ggplot(data = <DATA>) + 
+  <GEOM_FUNCTION>(
+     mapping = aes(<MAPPINGS>),
+     stat = <STAT>, 
+     position = <POSITION>
+  ) +
+  <FACET_FUNCTION>
+
+
+## 2.14 Assignment: Plot Deconstruction
+
+Import data: 
+(Note: rate of homelessness is x out of 10,000 people)
+
+Initial graph: 
+- Did not have units
+- Did not read easily 
+- Said it represents the 10 states with the highest rates of homelessness but really showed 12
+- Showed that the average rate of homelessness in the US decreased, while the article claimed that the rate had increased (article title: "America’s homeless population rises for first time in years")
+- Is no longer found in the original article - maybe they realized it does not support the argument that the article is making
+
+
+
+```{r}
+homelessness <- read_excel("~/Desktop/MB5370 Techniques 1/MB5370 Module 4 Homelessness.xlsx")
+```
+
+Group by state and find the difference in homelessness rate from 2015 to 2017
+
+```{r}
+homelessness_summary <- homelessness %>% 
+  group_by(State) %>% 
+  mutate(Difference = `2017 Homelessness Rate` - `2015 Homelessness Rate`) %>% 
+  filter(Type == "state")
+```
+
+# NOTES!!! REORDER BARS FROM HIGHEST TO LOWEST CHANGE
+# CHANGE US AVERAGE TO A LINE ACROSS ALL OF THEM, NOT ITS OWN BAR
+```{r}
+ggplot(data = homelessness_summary) +
+  geom_bar(mapping = aes(x = reorder(State, -Difference), y = Difference, fill = "F8766D"), stat = "identity") +
+  labs(x = "State", y = "Change per 10,000 people", title = "Change in homelessness from 2015 to 2017", caption = "Includes the 12 U.S. states with the highest rates of homelessness.
+Values represent an increase or decrease in the number of homeless people per 10,000.") +
+  theme_light() +
+  theme(axis.text.x = element_text(angle = -45, hjust = 0), plot.caption = element_text(hjust = 0)) +
+  geom_hline(aes(yintercept = -0.3, linetype = "U.S. Average"), color = "blue") +
+  scale_linetype_manual(name = " ", values = c(1)) +
+  guides(fill = FALSE)
+```
+```{r}
+ggsave("Change in Homelessness.pdf", width = 7, height = 5)
+```
+
+
+

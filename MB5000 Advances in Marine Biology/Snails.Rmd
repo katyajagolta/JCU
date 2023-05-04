@@ -1,0 +1,225 @@
+---
+title: "Snails"
+output:
+  word_document: default
+  html_document: default
+date: "2022-08-15"
+---
+
+
+```{r}
+
+snails <- read.csv("~/Desktop/Oldies/Work & School/JCU/JCU Semester 2 2022/Advances in Marine Biology/All Snail Data.csv")
+
+summary(snails)
+```
+
+
+# Abundance by location
+```{r}
+snails_new <- snails
+
+snails_new$Zone <- factor(snails_new$Zone, c("Low", "Mid", "High"))
+counts <- table(snails_new$Site, snails_new$Zone)
+counts
+barplot(counts, beside=TRUE, xlab = "Intertidal zone", ylab = "Abundance", legend = c("North","South"), col=c("brown2", "cornflowerblue"), main = "Total abundance by intertidal zone")
+
+
+# Find out which test for comparing total count of the groups
+
+
+```
+
+
+
+```{r}
+library(tidyverse)
+library(plotrix)
+
+snail_count <- snails %>% 
+  group_by(Zone, Site, Zone_Site, Transect, Quadrat) %>% 
+  summarize(count = n()) %>% 
+  group_by(Zone, Site, Zone_Site) %>% 
+  summarise(mean = mean(count), sd = sd(count), st_error = std.error(count)) %>% 
+  arrange(factor(Zone_Site, levels = c("Low North", "Low South", "Mid North", "Mid South", "High North", "High South")))
+
+snail_count$order <- as.numeric(c("1", "2", "3", "4", "5", "6"))
+
+ggplot(snail_count, aes(x = reorder(Zone_Site, order), y = mean)) +
+  geom_bar(stat = "identity", aes(fill = Site)) +
+  geom_errorbar(aes(ymin = mean - st_error, ymax = mean + st_error), width = 0.4, size = 0.4) +
+  labs(x = "Intertidal zone", y = "Mean gastropod count per quadrat (+/- SE)") +
+  scale_fill_grey(start = 0.4, end = 0.7)
+
+
+ggplot(snail_count, aes(x = Site, y = mean)) +
+  geom_bar(stat = "identity", aes(fill = Site))
+
+
+ggplot(snail_count, aes(x = Zone, y = mean)) +
+  geom_bar(stat = "identity", aes(fill = Zone))
+
+```
+
+
+
+```{r}
+library(tidyverse)
+
+snail_count2 <- snails %>% 
+  group_by(Zone, Site, Zone_Site, Transect, Quadrat) %>% 
+  summarize(count = n())
+
+hist(snail_count2$count)
+
+qqnorm(snail_count2$count)
+qqline(snail_count2$count)
+
+shapiro.test(snail_count2$count)
+
+# NOT NORMAL
+
+# Mann-Whitney U Test for Mean Abundance by Site (N/S)
+wilcox.test(count ~ Site, data = snail_count2)
+# p < 0.05 --> reject the null that there is no difference in size between the two sites (N/S)
+# Sufficient evidence to conclude that there is a significant difference in size between the two sites (N/S)
+
+
+# Kruskal-Wallis Test for Mean Abundance by Zones (Low/Mid/High)
+kruskal.test(count ~ Zone, data = snail_count2)
+
+```
+
+
+
+
+
+
+
+# Size frequency distribution
+```{r}
+library(lattice)
+bwplot(snails$Size ~ snails$Site, xlab = "Site", ylab = "Size (mm)", main = "Gastropod size by site")
+
+snails_new$Zone <- factor(snails_new$Zone, c("Low", "Mid", "High"))
+bwplot(snails_new$Size ~ snails_new$Zone, xlab = "Intertidal zone", ylab = "Size (mm)", main = "Gastropod size by intertidal zone")
+
+
+snails_new <- snails
+snails_new$Zone_Site <- factor(snails_new$Zone_Site, c("Low North", "Low South", "Mid North", "Mid South", "High North", "High South"))
+bwplot(snails_new$Size ~ snails_new$Zone_Site, xlab = "Site", ylab = "Size (mm)", main = "Gastropod size by site")
+
+
+site_mean_size <- snails %>% 
+  group_by(Site) %>% 
+  summarize(mean = mean(Size, na.rm = TRUE))
+
+
+zone_mean_size <- snails %>% 
+  group_by(Zone) %>% 
+  summarize(mean = mean(Size, na.rm = TRUE))
+
+
+```
+
+
+Try sqrt transformation for size
+
+```{r}
+# Testing for normality
+hist(snails_new$Size)
+
+# QQ Plot
+qqnorm(snails_new$Size)
+qqline(snails_new$Size)
+
+# Shapiro-Wilk test
+shapiro.test(snails_new$Size)
+
+# Conclusion: NOT NORMAL
+
+
+# Mann-Whitney U Test for Size by Site (N/S)
+wilcox.test(Size ~ Site, data = snails_new)
+# p < 0.05 --> reject the null that there is no difference in size between the two sites (N/S)
+# Sufficient evidence to conclude that there is a significant difference in size between the two sites (N/S)
+
+
+# Kruskal-Wallis Test for Size by Zones (Low/Mid/High)
+kruskal.test(Size ~ Zone, data = snails_new)
+
+# p < 0.05 --> reject the null hypothesis that there is no difference in size across zones
+# Sufficient evidence to conclude that there is a significant difference in size across the intertidal zones
+
+```
+
+
+
+# Species abundance
+
+```{r}
+snails_new$Zone <- factor(snails_new$Zone, c("Low", "Mid", "High"))
+
+library(tidyverse)
+
+snails_new %>% 
+  filter(!is.na(Species)) %>% 
+  ggplot() +
+  geom_bar(mapping = aes(fill = Species, x = Zone), na.rm = T) +
+  ggtitle("Gastropod species distribution across intertidal zones")
+
+# use percentages instead!
+library(tidyverse)
+
+snails_new %>% 
+  filter(!is.na(Species)) %>% 
+  ggplot() +
+  geom_bar(mapping = aes(fill = Species, x = Zone), color = "black", position = "fill", na.rm = T) +
+  scale_fill_discrete(breaks=c('species 1', 'species 2', 'species 3', 'species 4', 'species 5', 'species 6', 'species 7', 'species 8', 'species 9', 'species 10', 'species 11', 'species 12', 'species 13', 'species 14', 'species 15', 'species 16')) +
+  ylab('Proportion of total count')
+
+
+snails_new %>% 
+  filter(!is.na(Species)) %>% 
+  ggplot() +
+  geom_bar(mapping = aes(fill = Species, x = Zone), color = "black", position = "fill", na.rm = T) +
+  scale_fill_discrete(breaks=c('species 1', 'species 2', 'species 3', 'species 4', 'species 5', 'species 6', 'species 7', 'species 8', 'species 9', 'species 10', 'species 11', 'species 12', 'species 13', 'species 14', 'species 15', 'species 16')) +
+  ylab('Proportion of total count') +
+  facet_wrap(~ Site)
+
+
+# species richness by zone - frequency analysis
+
+# multivariate analysis?
+```
+
+
+
+
+```{r}
+diversity <- snails %>% 
+  group_by(Site, Species) %>% 
+  summarize(count = n())
+```
+
+
+
+High
+78
+
+Low
+202
+
+Mid
+1220
+
+
+
+
+
+
+
+
+
+
+

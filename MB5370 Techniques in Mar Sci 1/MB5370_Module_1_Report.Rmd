@@ -1,0 +1,479 @@
+---
+title: "MB5370 Module 1: Introduction to Programming"
+author: Katya Jagolta
+Affiliation: James Cook University
+output: html_document
+date: "2023-02-22"
+---
+
+Workspace: 
+~/MB5370 Techniques in Mar Sci 1/Module_01.R
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(tidyr)
+```
+
+
+# Workshop 1
+
+### 2.3.6 Getting started
+
+Simple math:
+```{r}
+2+1
+```
+
+Returns a sequence of numbers from 1 to 30:
+```{r}
+1:30 
+```
+
+
+### 2.3.7 Variables, objects, and assignment
+
+Assigning my age, my name, and then some simple math with age:
+```{r}
+age <- 26
+first_name <- 'Katya' 
+age + 1 
+age + age
+```
+
+Errors:
+Names can't start with a number and can't include special symbols or spaces!
+(Made the following code comments in order to knit)
+
+```{r}
+# Errors
+# 01_age <- 26
+# !_age <- 26
+# age katya <- 26
+```
+
+Uppercase vs. lowercase makes a difference:
+
+```{r}
+Age <- 45
+age
+Age
+```
+
+Exercise: sum numbers.
+
+1. Add up numbers and assign to a name.
+2. Name another number.
+3. Add both together.
+
+```{r}
+apple <- 15+25.1+20.25
+banana <- 17 
+apple + banana 
+```
+
+
+### 2.3.9 Built-in functions.
+
+1. Assign the value 26.7 to years_old.
+2. Round up.
+3. Round down.
+
+```{r}
+years_old <- 26.7 
+round(years_old) 
+floor(years_old) 
+```
+
+Exercise: use the paste function to make a statement of my age (rounded to 2 decimal places) using the objects I've made.
+
+```{r}
+name <- "Katya"
+years_old <- 26.765
+round(years_old, 2)
+
+paste(name, "is", floor(years_old), "years old.")
+```
+
+
+### 2.3.10 Debugging
+
+Misconceptions: Value of total is a spreadsheet would be 100, but in programming the variable maintains the value it was assigned (65) until reassigned.
+
+```{r}
+grade <- 55
+total <- grade + 10
+print (total) 
+grade <- 90
+print (total)
+total <- grade + 10
+print (total)
+```
+
+What will this code do?
+The printed result should equal 10. 
+```{r}
+p <- 2 
+z <- 5 
+out <- p*z 
+print (out) 
+```
+
+Error reports: 
+
+```{r}
+# out <- p * a
+```
+Error: object 'a' not found (because a is an undefined variable). The following should work because both p and z have already been defined:
+
+
+```{r}
+out <- p * z
+out
+```
+
+Testing: the following will tell you whether x is a character and then whether it's numeric.
+```{r}
+x <- 1
+is.character(x)
+is.numeric(x)
+```
+
+Exercise: identify problems in this code...
+
+1. Missing a comma.
+2. Misspelled "my_quiz"
+3. Function should be length()
+```{r}
+# my_quiz <- c("uno",
+#             "dos",
+#             "tres",
+#             "quatro" 
+#             "cinco")
+# print (my_quis)
+# str(my_quiz)
+# len(my_quiz)
+```
+
+Fixed the code and testing it: creates and prints my_quiz, then tells you the data type and the length/number of elements.
+```{r}
+my_quiz <- c("uno",
+             "dos",
+             "tres",
+             "quatro",
+             "cinco")
+print (my_quiz)
+str(my_quiz)
+length(my_quiz)
+```
+
+
+
+
+
+### 2.3.11 Data types
+
+Exercise: try to produce the 4 data types (character, numeric, integer, logical)
+
+```{r}
+# Character:
+char <- "testing"
+class(char)
+
+# Numeric:
+num <- 7
+class(num)
+
+# Integer:
+int <- as.integer(num) # Change num (7) from numeric to an integer
+class(int)
+
+# Logical:
+log <- FALSE
+class(log)
+```
+
+
+### 2.3.12 Data structures
+
+Creating vectors of numeric elements, character elements, and a list. The final piece of code returns the 3rd element in the vector z.
+```{r}
+y <- c(1, 2, 3) 
+z <- c("Sarah", "Tracy", "Jon") 
+zz <- c(1, "Sarah", 3, "Jon")
+yy <- list(1, "a", TRUE) 
+
+class(y) 
+class(z) 
+class(zz) 
+class(yy) 
+
+z[3] 
+```
+
+
+### 2.3.13 Packages and libraries
+
+Already have ggplot2, tidyr, and dplyr installed. 
+
+```{r}
+# install.packages("earthones")
+# Unsuccessful! Package ‘earthones’ is not available for this version of R
+
+# install.packages("redlistr")
+# Success
+
+# install.packages("terra")
+# Success
+```
+
+Create a plot: Make data for the x-axis and y-axis, then plot y by x.
+
+```{r}
+x <- c(-1, -0.8, -0.6, -0.4, -0.2, 0, 0.2, 0.4, 0.6, 0.8, 1)
+x
+y <- x^3 
+y
+qqplot(x,y) 
+```
+
+
+### 2.3.14 Coding best practices
+
+Headers are at top of script along with calling packages ggplot2 and tidyr. 
+
+
+
+# Workshop 2
+
+### 3.1.1 Learning about for-loops
+
+1. Returns "one run" 4 times, one for each word
+2. Returns each of the 4 words
+3. Uses "value" instead of "word"; still returns each of the 4 words
+4. sys.sleep() suspends execution of R expressions for a specified time interval, in this case 1 second to print each word - helpful if you want to watch & check what your code is doing as it runs. 
+
+```{r}
+for (value in c("My", "first", "for", "loop")) { print("one run")
+} 
+
+for (value in c("My", "second", "for", "loop")) { print(value)
+} 
+
+for (word in c("My", "third", "for", "loop")) { print(word)
+} 
+
+for (word in c("My", "fourth", "for", "loop")) { print(word)
+  Sys.sleep(1)
+} 
+```
+
+Custom for loop: For i, meaning every single element in my_list, this for loop will print "I am printing loop number i." and then will say "For loop complete" when it is complete!
+
+```{r}
+my_list <- 1:50
+my_list
+str(my_list)
+
+for (i in my_list) {
+  result <- i
+  out <- paste("I am printing loop number:", result, ".")
+  print(out)
+  Sys.sleep(0.6)
+}
+print("For loop complete")
+```
+
+Adding a constant outside the loop: For each i, this for loop will print "I am printing loop number (i+500)." and then will say "For loop complete" when it is complete!
+
+```{r}
+add_me <- 500
+
+for (i in my_list) {
+  result <- i + add_me
+  out <- paste("I am printing loop number:", result, ".")
+  print(out)
+  Sys.sleep(0.2)
+} 
+print("For loop complete") 
+```
+
+Nested for loop: For each round of the base loop (i), it runs all of the inside loop (j), producing something kind of like an outline in this case (1 abc, 2 abc, 3 abc, etc.).
+
+```{r}
+for (i in c(1,2,3,4,5)) {
+  print(paste("I am base loop number: ", i))
+  Sys.sleep(0.5)
+  for (j in c("a","b","c")) {
+    print(paste("... I am inside loop ", j))
+  }
+} 
+print("Nested loop complete :)")
+```
+
+Exercise: for loop to list my favorite animals.
+
+```{r}
+numbers <- c(1,2,3,4,5)
+animals <- c("tiger shark", "lobster", "blue crab", "shrimp", "cuttlefish")
+
+for (i in numbers) {
+  print(paste("My number", i, "favorite animal is a", animals[i]))
+}
+print("Thanks for coming to my TedTalk!")
+```
+
+
+### 3.1.2 If and if-else statements
+
+1. Assigns the value 1 to x.
+2. Says if x equals 1, it now equals 2 (reassigns x).
+3. Confirming that x now does not equal 1 but equals 2.
+4. If x is 1, print "x is: 1", otherwise print "We're running the else statement" and then print "x is: 2". 
+```{r}
+x <- 1
+
+if (x == 1) {
+  x <- 2
+} 
+
+x == 1 
+x == 2 
+
+if (x == 1) {
+  print(paste("x is:", x))
+} else {
+  print("We're running the else statement")
+  print(paste("x is:", x))
+}
+```
+
+Exercise: make my own if else statement.
+
+1. Says if name is Katya, the last name is Jagolta.
+2. Prints my full name, Katya Jagolta.
+
+```{r}
+name <- "Katya"
+
+if (name == "Katya") {
+  last_name <- "Jagolta"
+}
+print(paste(name, last_name))
+```
+
+Changing the name:
+
+1. Says if the name is Katya, the last name is Jagolta; otherwise, the last name is Kenney.
+2. Reassigned name to "Kaysha", so it prints Kaysha Kenney.
+
+```{r}
+name <- "Kaysha"
+
+if (name == "Katya") {
+  last_name <- "Jagolta"
+} else {
+  last_name <- "Kenney"
+} 
+print(paste(name, last_name))
+```
+
+Changing name back to Katya see what that same if/else statement does: returns the correct name, Katya Jagolta.
+
+```{r}
+name <- "Katya"
+
+if (name == "Katya") {
+  last_name <- "Jagolta"
+} else {
+  last_name <- "Kenney"
+}
+print(paste(name, last_name))
+```
+
+Adding a new first name without an associated last name:
+
+1. Says if name is Katya, last name is Jagolta; if name is Kaysha, last name is Kenney; otherwise, the last name is unknown.
+2. Prints "Kyle... last name is unknown".
+
+```{r}
+name <- "Kyle" 
+
+if (name == "Katya") {
+  last_name <- "Jagolta"
+} else if (name == "Kaysha"){
+  last_name <- "Kenney"
+} else {
+  last_name <- "... last name is unknown"
+} 
+print(paste(name, last_name)) 
+```
+
+
+### 3.1.3 Functions
+
+1. Formula to convert F to C (but temp_F isn't defined yet).
+2. Convert 100 F to C = 38 C.
+3. Convert 200 F to C = 93 C.
+
+```{r}
+# temp_C <- (temp_F - 32) * 5/9 
+(100-32) * 5/9 
+(200-32) * 5/9 
+```
+
+Make a function to convert F to C so we don't have to type this equation every time, then check that it works correctly:
+
+```{r}
+F_to_C <- function(temp_F){
+  temp_C <- (temp_F - 32) * 5/9
+  return(temp_C)
+}
+
+F_to_C(100)
+F_to_C(200)
+```
+
+Exercise: write a function to convert celcius to fahrenheit, then test it.
+
+```{r}
+# temp_F <- temp_C * 9/5 + 32
+
+C_to_F <- function(temp_C){
+  temp_F <- temp_C * 9/5 + 32
+  return(temp_F)
+}
+
+C_to_F(0) 
+C_to_F(20) 
+C_to_F(40)
+```
+
+
+
+### 3.1.4 Data frames
+
+1. Make a dataframe.
+2. Check the structure of the dataframe.
+3. Convert col1 from numeric to factor (a category rather than a real continuous number).
+
+(Col1 supposed to be factors at the end but still numeric; worked before but not working now, not sure why).
+
+```{r}
+my_dataframe <- data.frame(number = c(1,2,3), 
+                           name = c("Katya", "Kaysha", "Kyle"),
+                           logical = c(TRUE, TRUE, FALSE)) 
+my_dataframe
+str(my_dataframe)
+
+as.factor(my_dataframe$no)
+str(my_dataframe) 
+```
+
+
+
+
+
+
+
+

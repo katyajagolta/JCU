@@ -1,0 +1,66 @@
+---
+title: "Debris Stats Tests"
+output: html_document
+date: "2023-01-10"
+---
+
+```{r}
+library(tidyverse)
+library(readxl)
+library(plotrix)
+macroplastics <- read_excel("~/Desktop/MB5001 Macroplastics Counts.xlsx")
+plastics_mass <- read_excel("~/Desktop/MB5001 Macroplastics Mass.xlsx")
+```
+
+
+
+# ABUNDANCE
+
+## Difference in abundance between sites: chi-square goodness of fit test
+
+```{r}
+chisq.test(mean_for_sites$mean, p = c(1/3, 1/3, 1/3))
+```
+Conclusion: there is a significant difference between the observed frequency of debris across the sites and the expected frequency (expected = there will be an equal abundance of debris across all sites)
+
+
+## Difference in abundance between sampling heights: chi-square goodness of fit test
+
+```{r}
+chisq.test(mean_for_heights$mean, p = c(1/5, 1/5, 1/5, 1/5, 1/5))
+```
+Conclusion: there is a significant difference between the observed frequency of debris across the sampling heights and the expected frequency (expected = there will be an equal abundance of debris across all sampling heights)
+
+
+
+# MASS
+
+## Difference in mass of debris between sampling heights: kruskal-wallis test
+
+```{r}
+kruskal.test(Total_weight_kg ~ Tidal_line, data = plastics_mass)
+```
+Conclusion: there is not a significant difference in mass of debris between sampling heights
+
+
+
+# MATERIAL
+
+
+
+# CATEGORY/SOURCE
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,85 @@
+---
+title: "Week 2 part 2"
+output: html_document
+date: "2022-08-04"
+---
+
+
+# Clean Data
+# Step 0 
+
+
+```{r}
+#Upload data
+Sea_urchins <- read_excel("Desktop/Design & Analyses/Datasets/Sea_urchins.xlsx")
+summary(Sea_urchins)
+
+#Check Datatypes 
+#Factors 
+Sea_urchins$Site<-factor(Sea_urchins$Site)
+Sea_urchins$Area<-factor(Sea_urchins$Area)
+Sea_urchins$Month<-factor(Sea_urchins$Month)
+```
+
+
+```{r}
+#checking for normality 
+x<-Sea_urchins$GSI
+{hist(x, freq=FALSE) 
+  curve(dnorm(x,mean=mean(x), sd=sd(x)), 
+        add=TRUE, type = "l")}
+qqnorm(x)
+qqline(x)
+```
+
+
+```{r}
+# Remove NA 
+NA.rm=TRUE
+```
+
+
+```{r}
+#Collapse 
+Sea_urchins$Area<-fct_collapse(Sea_urchins$Area, High = c("A" , "B"), Low = c("C","D"))
+```
+
+
+```{r}
+#CoPlot
+coplot(Area ~ GSI | Month, data = Sea_urchins)
+```
+
+
+```{r}
+Sea_urchins$Area<-fct_collapse(Sea_urchins$Area, High = c("A" , "B"), Low = c("C","D"))
+Sea_urchins1<-with(Sea_urchins, Sea_urchins[order(Area, Size, GSI),])
+```
+
+
+# Conclusion - Step 0 
+This data is not normally distributed. 
+
+
+
+# Step 1 - Outliers
+
+
+```{r}
+x <- Sea_urchins$GSI
+boxplot(x)
+```
+
+## Dotchart 
+```{r}
+dotchart(x)
+```
+
+
+## Step 1 - Conclusions 
+There were many outliers in the dataset, however we don't if the outliers are numerical. 
+
+
+# Question 2 
+No, we checked for normality and the data was not normally distributed so we cannot do an ANOVA test.
+

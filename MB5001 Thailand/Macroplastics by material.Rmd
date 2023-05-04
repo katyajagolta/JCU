@@ -1,0 +1,82 @@
+---
+title: "Macroplastics by material"
+output:
+  word_document: default
+  html_document: default
+date: "2023-01-07"
+---
+
+```{r}
+library(tidyverse)
+library(readxl)
+library(plotrix)
+macroplastics <- read_excel("~/Desktop/MB5001 Macroplastics Counts.xlsx")
+
+```
+
+
+```{r}
+macroplastics %>% 
+  ggplot() +
+  geom_bar(mapping = aes(fill = material, x = Tidal_line), na.rm = T) +
+  ggtitle("Debris material by tidal zone (abundance)") +
+  theme_classic()
+```
+
+
+```{r}
+macroplastics %>% 
+  ggplot() +
+  geom_bar(mapping = aes(fill = material, x = Tidal_line), na.rm = T, position = "fill") +
+  ggtitle("Percent of materials by tidal zone") +
+  theme_classic()
+```
+
+```{r}
+macroplastics %>% 
+  ggplot() +
+  geom_bar(mapping = aes(fill = material, x = Site), na.rm = T) +
+  ggtitle("Debris material separated by site (abundance)") +
+  theme_classic()
+```
+
+
+```{r}
+macroplastics %>% 
+  ggplot() +
+  geom_bar(mapping = aes(fill = material, x = Site), na.rm = T, position = "fill") +
+  ggtitle("Debris material (percentage) separated by site") +
+  theme_classic()
+```
+
+```{r}
+macroplastics %>% 
+  ggplot() +
+  geom_bar(mapping = aes(fill = material, x = Tidal_line), na.rm = T, position = "fill") +
+  ggtitle("Percent of materials by tidal zone") +
+  facet_wrap(~ Site) +
+  theme_classic()
+```
+
+
+For average count for each material with standard error bars:
+
+```{r}
+material_summary <- macroplastics %>% 
+  group_by(material) %>% 
+  summarise(mean = mean(Count), std_error = std.error(Count))
+
+ggplot(material_summary, aes(x = material, y = mean)) +
+  geom_bar(stat = "identity") +
+  geom_errorbar(aes(ymin = mean - std_error, ymax = mean + std_error), width = 0.4, size = 0.4) +
+  labs(x = "Material", y = "Mean rubbish count (+/- SE)") +
+  theme_classic()
+```
+
+
+
+
+
+
+
+

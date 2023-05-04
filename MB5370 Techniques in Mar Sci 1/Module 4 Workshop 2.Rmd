@@ -1,0 +1,220 @@
+---
+title: "MB5370 Module 4: Data Science"
+author: Katya Jagolta
+affiliation: James Cook University
+output: html_document
+date: "2023-05-02"
+---
+
+Workspace: 
+~/MB5370 Techniques in Mar Sci 1/MB5370 Module 4.Rmd
+
+
+# Workshop 2: Using ggplot2 for Communication
+
+```{r}
+library(tidyverse)
+library(viridis)
+library(hexbin)
+```
+
+## 3.1 Labels
+
+Adding title, subtitle, caption, axis, and legend labels:
+
+```{r}
+ggplot(mpg, aes(displ, hwy)) +
+  geom_point(aes(color = class)) +
+  geom_smooth(se = FALSE) +
+  labs(x = "Engine displacement (L)",
+    y = "Highway fuel economy (mpg)",
+    colour = "Car type",
+    title = "Fuel efficiency generally decreases with engine size",
+    subtitle = "Two seaters (sports cars) are an exception because of their light weight",
+    caption = "Data from fueleconomy.gov"
+  )
+```
+
+## 3.2 Annotations 
+
+Group data by class & put in descending order by fuel efficiency so the most fuel efficient vehicle in each class is at the top. Then use that to label each point that represents the most fuel efficient vehicle in each class.
+
+```{r}
+best_in_class <- mpg %>%
+  group_by(class) %>%
+  filter(row_number(desc(hwy)) == 1)
+
+ggplot(mpg, aes(displ, hwy)) +
+  geom_point(aes(colour = class)) +
+  geom_text(aes(label = model), data = best_in_class)
+```
+
+## 3.3 Scales
+
+Tweak scales from their default by offering values to the scale parameters:
+
+```{r}
+ggplot(mpg, aes(displ, hwy)) +
+  geom_point(aes(colour = class))
+
+ggplot(mpg, aes(displ, hwy)) +
+  geom_point(aes(colour = class)) +
+  scale_x_continuous(limits = c(0, 8)) +
+  scale_y_continuous(limits = c(0, 50)) +
+  scale_colour_discrete()
+```
+
+## 3.4 Axis ticks
+
+Change the ticks on the axes: in the above graph, the default ticks on the y-axis were at 20, 30, and 40; the code below changes the ticks to go from 15 to 40 in increments of 5.
+
+```{r}
+ggplot(mpg, aes(displ, hwy)) +
+  geom_point() +
+  scale_y_continuous(breaks = seq(15, 40, by = 5))
+```
+
+Eliminate values on tick marks completely:
+```{r}
+ggplot(mpg, aes(displ, hwy)) +
+  geom_point() +
+  scale_x_continuous(labels = NULL) +
+  scale_y_continuous(labels = NULL)
+```
+
+
+## 3.5 Legends and color schemes
+
+Change the position of a legend in relation to the plot:
+
+```{r}
+base <- ggplot(mpg, aes(displ, hwy)) +
+  geom_point(aes(colour = class))
+
+base + theme(legend.position = "left")
+base + theme(legend.position = "top")
+base + theme(legend.position = "bottom")
+base + theme(legend.position = "right") # the default
+base + theme(legend.position = "none") # to get rid of the legend
+```
+
+## 3.6 Replacing a scale
+
+Log transform carat and price to better see the precise relationship between them: 
+
+```{r}
+ggplot(diamonds, aes(carat, price)) +
+  geom_bin2d() + 
+  scale_x_log10() + 
+  scale_y_log10()
+```
+
+Change a color scale:
+
+```{r}
+ggplot(mpg, aes(displ, hwy)) +
+  geom_point(aes(color = drv))
+
+ggplot(mpg, aes(displ, hwy)) +
+  geom_point(aes(color = drv)) +
+  scale_colour_brewer(palette = "Set1")
+```
+
+Add redundant shape mapping: helps to clearly differentiate points by whatever variable you choose and ensures plot can be interpreted in black and white.
+
+```{r}
+ggplot(mpg, aes(displ, hwy)) +
+  geom_point(aes(color = drv, shape = drv)) +
+  scale_colour_brewer(palette = "Set1")
+```
+
+Can set (predefined) colors manually using scale_color_manual()
+
+```{r}
+presidential %>%
+  mutate(id = 33 + row_number()) %>%
+  ggplot(aes(start, id, color = party)) +
+    geom_point() +
+    geom_segment(aes(xend = end, yend = id)) +
+    scale_color_manual(values = c(Republican = "red", Democratic = "blue"))
+```
+
+Popular color package right now: viridis color scheme
+
+```{r}
+df <- tibble( # making a fake dataset so we can plot it
+  x = rnorm(10000),
+  y = rnorm(10000)
+)
+ggplot(df, aes(x, y)) +
+  geom_hex() + # a new geo
+  coord_fixed()
+
+ggplot(df, aes(x, y)) +
+  geom_hex() +
+  viridis::scale_fill_viridis() +
+  coord_fixed()
+```
+
+## 3.7 Themes
+
+Can customize the entire theme of a plot: change some or all of the non-data elements of a plot
+
+```{r}
+ggplot(mpg, aes(displ, hwy)) +
+  geom_point(aes(color = class)) +
+  geom_smooth(se = FALSE) +
+  theme_bw()
+
+ggplot(mpg, aes(displ, hwy)) +
+  geom_point(aes(color = class)) +
+  geom_smooth(se = FALSE) +
+  theme_light()
+
+ggplot(mpg, aes(displ, hwy)) +
+  geom_point(aes(color = class)) +
+  geom_smooth(se = FALSE) +
+  theme_classic()
+
+ggplot(mpg, aes(displ, hwy)) +
+  geom_point(aes(color = class)) +
+  geom_smooth(se = FALSE) +
+  theme_dark()
+```
+
+Can develop your own theme: this is Nick Murray's. Determines legend position, text fonts, colors, and sizes, etc. 
+
+```{r}
+ggplot(mpg, aes(displ, hwy)) +
+  geom_point(aes(color = class)) +
+  theme (panel.border = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.minor.y = element_blank(),
+        legend.position="bottom",
+        legend.title=element_blank(),
+        legend.text=element_text(size=8),
+        panel.grid.major = element_blank(),
+        legend.key = element_blank(),
+        legend.background = element_blank(),
+        axis.text.y=element_text(colour="black"),
+        axis.text.x=element_text(colour="black"),
+        text=element_text(family="Arial")) 
+```
+
+## 3.8 Saving and exporting plots
+
+```{r}
+ggplot(mpg, aes(displ, hwy)) + geom_point()
+
+ggsave("my-plot.pdf")
+# 7 x 4.32 in image now saved to my current working directory
+
+ggsave("my-plot-2.pdf", width = 5, height = 5) # 5 x 5 in image
+
+```
+
+
+
+
+
+

@@ -1,0 +1,211 @@
+---
+title: "MB5003 Curve Fitting"
+output: html_document
+date: "2023-04-06"
+---
+
+
+```{r}
+library(FSA)
+library(car)
+library(dplyr)
+library(ggplot2)
+```
+
+```{r}
+wf14T <- read.csv("~/Desktop/MB5003 Fisheries Science/Walleye_data_2014.csv")
+```
+
+```{r}
+dim(wf14T)
+```
+
+# Fitting Von Bertalanffy Growth Function (VBGF) to length at age dataset
+
+```{r}
+max_length <- max(wf14T$tl)
+
+ggplot(wf14T) +
+  geom_point(aes(x = age, y = tl, shape = sex, color = sex)) +
+  ylim(0, max_length) +
+  labs(x = "Age (years)", y = "Total length (cm)")
+```
+
+On average, girlies are bigger than the guys at any given age
+
+
+### Use nls() function, non-linear least squares, to fit a VBGF to the length-at-age data
+  - "~" in nls() means equal 
+  - Make an educated guess of starting parameter values for Linf, K, and t0
+  - Use the highest fish length value in our dataset for our Linf guess (673 TL)
+  - K is difficult to guess - maybe K = 0.5?
+  - t0 is negative and a small number, so maybe t0 = -2
+  
+```{r}
+nls(tl ~ Linf * (1-exp(-K*(age-t0))), data = wf14T, start = c(Linf = 673, K = 0.5, t0 = -2))
+```
+
+We guessed our starting input parameter values, but can also have the computer do so:
+
+```{r}
+f.starts <- vbStarts(tl~age, data = wf14T)
+```
+
+Use these starting values in the VBGF fitting:
+```{r}
+f.fit <- nls(tl ~ Linf * (1 - exp(-K*(age-t0))), data = wf14T, start = f.starts)
+
+f.fit
+coef(f.fit)
+```
+
+Results are the same as when we made an educated guess for the starting parameter values - that's good
+
+Using our fitted VBGF, we can predict length at different age classes
+
+```{r}
+# Check max age
+max(wf14T$age)
+```
+
+```{r}
+# Predicted length given age using our constructed function
+predict_result <- predict(f.fit, data.frame(age = -2:20))
+predict_result
+```
+
+Superimpose our fitted VBGF to our data using ggplot:
+
+```{r}
+ggplot() +
+  geom_point(data = wf14T, aes(x = age, y = tl)) +
+  xlim(-2, 20) +
+  ylim(0, max_length) +
+  labs(x = "Age (years)", y = "Total length (cm)") +
+  geom_line(aes(x = -2:20, y = predict_result))
+```
+
+Can also calculate confidence intervals using bootstrapping
+- Bootstrapped confidence intervals for the parameter estimates are computed by passing the saved nls() object to Boot() and then passing the saved Boot() object to confint()
+
+```{r}
+f.boot1 <- Boot(f.fit)
+
+confint(f.boot1)
+```
+
+
+# Fitting stock-recruitment relationships to a stock-recruitment dataset
+
+Disaggregate the data by male & female, then calculate K, Linf, and t0 for each
+
+```{r}
+cod_data <- read.csv("~/Desktop/MB5003 Fisheries Science/Stock-recruitment-data.csv")
+
+head(cod_data)
+```
+
+```{r}
+ggplot(data = cod_data, aes(x = SSB, y = Recruitment, color = Year)) +
+  geom_point()
+```
+
+
+```{r}
+# Or if you want to add the years along with the data points, you can do this
+
+library("ggrepel") # To make sure that the year text will not block the data points
+
+ggplot(data = cod_data, aes(x=SSB, y=Recruitment)) + 
+  geom_point() +
+  geom_text_repel(aes(label=Year))
+```
+
+
+## Fit different stock-recruitment lines to the data:
+
+### 1. Density-Independent Mortality: R = a*S (linear)
+a is a constant, with a unit of recruits/spawners
+S = spawning stock biomass (SSB)
+
+Plot recruits/SSB and eyeball the mean value to make an educated guess of what initial "a" value to use in our fitting
+
+```{r}
+ggplot() +
+  geom_point(data = cod_data, aes(x = SSB, y = Recruitment/SSB))
+```
+
+Looks like a = 5 can be a good starting point
+
+Use non-linear least square function nls() again on our cod_data, then add the predicted stock-relationship to our data
+
+```{r}
+density_independent_SR <- nls(Recruitment ~ a*SSB, data = cod_data, start = c(a = 5))
+density_independent_SR
+```
+
+```{r}
+# Range of SSB that we wish to predict the recruitment
+SSB_range <- data.frame(SSB = seq(0, 300000, by = 10000))
+
+head(SSB_range)
+```
+
+```{r}
+# Predict recruitment using the density-independent function
+density_independent_SR_predict <- predict(density_independent_SR, SSB_range)
+
+# Plot
+ggplot() +
+  geom_point(data = cod_data, aes(x = SSB, y = Recruitment)) +
+  geom_line(aes(x = SSB_range$SSB, y = density_independent_SR_predict), color = "red") +
+  ggtitle("Density-independent stock-recruitment function")
+```
+
+
+### 2. Beverton and Holt: R = (a*S)/(b+S)
+
+Can re-write the equation as: R = aS/(1 + bprime*S) where bprime = 1/b
+If bprime = 0, the stock-recruitment equation will be same as the density-independent one (R = aS)
+
+So, the parameter "a" of a Beverton-Holt function is still the recruit per spawner estimate like in equation #1. Use the "a" we generated in the previous example
+
+For bprime, the Beverton-Holt model will reach an asymptote as spawning stock biomass increases. This asymptote is described by Rpeak = a/bprime
+
+Use a = 6.346 from above and Rpeak = 1,000,000 (the average recruitment at high spawning stock biomass) to calculate bprime
+
+bprime = a/Rpeak = 6.346/1000000
+
+Use non-linear least square function nls() again on our cod_data, then add the predicted stock-relationship to our data:
+
+```{r}
+beverton_holt <- nls(Recruitment ~ (a*SSB)/(1+(6.346/1000000*SSB)), data = cod_data, start = c(a = 5))
+beverton_holt
+```
+
+
+```{r}
+# Predict recruitment using the density-independent function
+beverton_holt_predict <- predict(beverton_holt, SSB_range)
+
+# Plot
+ggplot() +
+  geom_point(data = cod_data, aes(x = SSB, y = Recruitment)) +
+  geom_line(aes(x = SSB_range$SSB, y = beverton_holt_predict), color = "blue") +
+  ggtitle("Beverton-Holt stock-recruitment function")
+```
+
+
+
+### 3. Ricker: R = a*S*e^(-bS)
+
+If b = 0, then Recruitment = aS, which is the same as the density-independent stock-recruitment relationship. The parameter “a” is still the recruit per spawner estimate from the density-independent stock-recruitment model. The parameter “b” is the density-dependent parameter.
+
+Rpeak = a/be
+And peak recruitment occurs at a spawning stock biomass equal to 1/b
+
+By looking at the raw data, seems like the peak recruitment occurs at SSB=100000. So, a good starting point would be 100000=1/b or b=1/100000
+
+
+
+

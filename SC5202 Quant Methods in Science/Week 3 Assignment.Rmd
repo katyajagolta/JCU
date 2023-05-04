@@ -1,0 +1,143 @@
+---
+title: "Week 3 Assignment"
+output: html_document
+date: "2022-08-08"
+---
+
+
+
+```{r echo=T, results='hide', fig.show='hide'}
+SU <- read_csv("Desktop/Design & Analyses/Datasets/Sea_urchins_cleaned.csv")
+
+hist(SU$GSI) # Checking normality of GSI
+bwplot(SU$GSI ~ SU$Size) # Checking homogeneity of variances of GSI by size class
+
+```
+
+
+
+# Log Transformation of GSI
+
+```{r echo=T, results='hide', fig.show='hide'}
+SU$GSI_log <- log(SU$GSI) # Transforming the GSI data with a log transformation
+
+hist(SU$GSI_log) # Histogram to check for normality of our log-transformed data
+
+qqnorm(SU$GSI_log) # QQ Plot to check for normality of our log-transformed data
+qqline(SU$GSI_log)
+
+shapiro.test(SU$GSI_log) # Shaprio-Wilk test to check for normality of our log-transformed data
+```
+
+```{r echo=T, results='hide', fig.show='hide'}
+# Checking for homogeneity of variances of the log-transformed GSI of different size classes
+library(lattice)
+bwplot(SU$GSI_log ~ SU$Size)
+
+# Creating a residual plot vs fitted plot
+log.model <- lm(SU$GSI_log ~ SU$Size)
+
+plot(log.model)
+
+```
+
+
+Is the assumption of normality still violated?
+- Our log-transformed data still violates the assumption of normality 
+
+Is the assumption of homogeneity of variances still violated?
+- No, our variances are now homogeneous after log-transforming our data
+
+
+
+
+# Square Root Transformation of GSI
+
+```{r echo=T, results='hide', fig.show='hide'}
+SU$GSI_sqrt <- sqrt(SU$GSI) # Transforming the GSI data with a square root transformation
+
+hist(SU$GSI_sqrt) # Histogram to check for normality of our sqrt-transformed data
+
+qqnorm(SU$GSI_sqrt) #  QQ Plot to check for normality of our sqrt-transformed data
+qqline(SU$GSI_sqrt)
+
+shapiro.test(SU$GSI_sqrt) # Shaprio-Wilk test to check for normality of our sqrt-transformed data
+
+```
+
+```{r echo=T, results='hide', fig.show='hide'}
+# Checking for homogeneity of variances of the sqrt-transformed GSI of different size classes
+library(lattice)
+bwplot(SU$GSI_sqrt ~ SU$Size)
+
+# Creating a residual plot vs fitted plot
+sqrt.model <- lm(SU$GSI_sqrt ~ SU$Size)
+
+plot(sqrt.model)
+```
+
+
+Is the assumption of normality still violated?
+- GSI looks fairly normally distributed after being transformed but the Shapiro-Wilk test shows that the data is still not normally distributed
+
+Is the assumption of homogeneity of variances still violated?
+- No, our variances are now homogeneous after square-root transforming our data
+
+
+
+
+
+# Subsetting data by size class IF WE NEED IT LATER
+CS_log <- subset(SU, Size == "CS")
+US_log <- subset(SU, Size == "US")
+Small_US_log <- subset(SU, Size == "Small-US")
+
+
+
+
+# Permutation test to test whether GSI differs among the size classes
+
+```{r echo=T, results='hide', fig.show='hide'}
+# Step 1: calculate test statistic on original data set
+
+anova <- aov(SU$GSI ~ SU$Size)
+summary(anova)
+```
+
+
+```{r echo=T, results='hide', fig.show='hide'}
+# Step 2: run permutation
+
+output <- rep(NA, 10000) # Empty vector (NA) to store t-values with length "replicates" as set above
+
+for(i in 1:10000){ # Create a for loop
+        SU$GSI_rando <- sample(SU$GSI, replace = FALSE) #randomize variable
+       a <- aov(GSI_rando ~ Size, data = SU) # run ANOVA and store output in "a"
+       output[i] <- a$statistic # extract F-value from "a" and store in output 
+       }
+
+dist <- hist(as.numeric(output)) #create a distribution of new F-values (i.e. our new null hypothesis)
+
+```
+
+I think you need to include a line of code that actually asks for the summary (e.g. summary(aov) 0 before you run the output[i] line
+
+
+
+
+```{r echo=T, results='hide', fig.show='hide'}
+# Step 3: calculate p-value of permutation test
+
+
+```
+
+
+Note: ANOVA is always a one-tailed test
+P = 1-percentile
+
+Conclusion: 
+
+
+
+
+

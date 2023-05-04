@@ -1,0 +1,95 @@
+---
+title: "Size"
+output: html_document
+date: "2022-09-21"
+---
+
+```{r}
+# 2-way ANOVA for size data (not transformed)
+aov_size <- aov(Size~Zone*Site, data = snails_new)
+summary(aov_size)
+plot(aov_size)
+
+# Levene's test
+leveneTest(Size~Zone*Site, data = snails_new)
+```
+
+
+
+```{r}
+
+# 2-way ANOVA for size data (log transformed)
+snails_new$logsize <- log(snails_new$Size)
+aov_log_size <- aov(logsize~Zone*Site, data = snails_new)
+summary(aov_log_size)
+plot(aov_log_size)
+
+# Levene's test
+leveneTest(logsize~Zone*Site, data = snails_new)
+
+```
+
+
+
+```{r}
+# 2-way ANOVA for size data (sqrt-transformed)
+snails_new$sqrtsize <- sqrt(snails_new$Size)
+aov_sqrt_size <- aov(sqrtsize~Zone*Site, data = snails_new)
+summary(aov_sqrt_size)
+plot(aov_sqrt_size)
+
+# Levene's test
+leveneTest(logsize~Zone*Site, data = snails_new)
+```
+
+
+
+```{r}
+
+ggplot(snails_new, aes(x = Zone, y = Size)) +
+  geom_boxplot(aes(fill = Site)) +
+  facet_wrap(~Site) +
+  scale_fill_grey(start = 0.4, end = 0.7)
+  
+```
+
+
+In discussion: some heterogeneity of variance driven by the tiny and consistent species 10 in north high (say how many there were) - variance of that one was very small (say see appendix for residual plots)
+
+
+```{r}
+
+snails %>% 
+  group_by(Site, Zone) %>% 
+  summarize(mean = mean(Size, na.rm = TRUE))
+
+```
+
+
+
+```{r}
+library(tidyverse)
+
+not_species10 <- subset(snails_new, Species != "species 10")
+
+ggplot(not_species10, aes(x = Zone, y = Size)) +
+  geom_boxplot(aes(fill = Site)) +
+  facet_wrap(~Site) +
+  scale_fill_grey(start = 0.4, end = 0.7)
+
+
+ggplot(not_species10, aes(x = Site, y = Size)) +
+  geom_boxplot() +
+  scale_fill_grey(start = 0.4, end = 0.7)
+```
+
+
+```{r}
+species10 <- subset(snails_new, Species == "species 10")
+
+```
+
+
+
+
+

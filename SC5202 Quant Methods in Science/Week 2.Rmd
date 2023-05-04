@@ -1,0 +1,226 @@
+---
+title: "Week 2: Data Cleaning & Exploration"
+output:
+  word_document: default
+  html_document: default
+date: "2022-08-01"
+---
+
+# Step 0: Clean/inspect data
+
+
+```{r}
+
+Sea_urchins <- read.csv("Desktop/Design & Analyses/Datasets/Sea_urchins.csv")
+
+summary(Sea_urchins)
+
+# Check Datatypes 
+
+result="hide"
+fig.show ="hide"
+```
+
+
+```{r}
+# Converting into factors 
+Sea_urchins$Site <-factor(Sea_urchins$Site)
+Sea_urchins$Area <-factor(Sea_urchins$Area)
+Sea_urchins$Month <-factor(Sea_urchins$Month)
+Sea_urchins$TD <- factor(Sea_urchins$TD)
+
+result="hide"
+fig.show ="hide"
+```
+
+```{r}
+# Collapsing
+
+library(tidyverse)
+Sea_urchins$Area <- fct_collapse(Sea_urchins$Area, High = c("A" , "B"), Low = c("C","D"))
+summary(Sea_urchins$Area)
+
+# Areas with high and low fishing pressure
+
+result="hide"
+fig.show ="hide"
+```
+
+Step 0 Conclusion: summarized the data, converted to factors, collapsed the data
+
+
+# Step 1: Finding the Outliers
+
+```{r}
+# Finding the outliers for GSI boxplot and dotchart
+
+x <-Sea_urchins$GSI
+boxplot(x)
+dotchart(x)
+
+result="hide"
+fig.show ="hide"
+```
+
+```{r}
+# Sensitivity Analysis
+
+library(tidyverse)
+Q3 <- quantile(Sea_urchins$GSI, probs = .75, na.rm = TRUE)
+IQR <- IQR(Sea_urchins$GSI, na.rm = TRUE)
+seaurchins1 <- subset(Sea_urchins$GSI, Sea_urchins$GSI < (Q3 + 1.5*IQR))
+  
+result="hide"
+fig.show ="hide"
+```
+
+```{r}
+boxplot(seaurchins1)
+
+# Outliers have been removed
+
+result="hide"
+fig.show ="hide"
+```
+
+Step 1 Conclusion: made a boxplot and dotchart, found outliers, and removed outliers
+
+
+
+# Step 2: Homogeneity of variance
+
+```{r}
+library(tidyverse)
+Sea_urchins$Area <- fct_collapse(Sea_urchins$Area, High = c("A" , "B"), Low = c("C","D"))
+summary(Sea_urchins$Area)
+
+library(lattice)
+bwplot(Sea_urchins$GSI ~ Sea_urchins$Area | Sea_urchins$Site)
+
+result="hide"
+fig.show ="hide"
+```
+
+
+```{r}
+# Creating a residual plot vs fitted plot for TD
+model <- lm(Sea_urchins$GSI ~ Sea_urchins$TD, data = Sea_urchins)
+
+plot(model)
+
+result="hide"
+fig.show ="hide"
+```
+
+Step 2 Conclusion: we have equal variances within each group
+
+
+
+# Step 3: Checking for Normality
+
+```{r}
+# Checking for normality 
+x <-Sea_urchins$GSI
+
+{hist(x, freq=FALSE) 
+  curve(dnorm(x,mean=mean(x), sd=sd(x)), 
+        add=TRUE, type = "l")}
+
+# QQ Normality Plot
+qqnorm(x)
+qqline(x)
+
+result="hide"
+fig.show ="hide"
+```
+
+Step 3 Conclusion: data is not normally distributed
+
+
+
+
+# Step 4: Are there lots of zeros in the data?
+
+Does not apply because we are not using count/discrete data, we're using continuous data
+
+
+
+
+# Step 5: Is there colinearity among the covariates?
+
+
+```{r}
+
+library(car)
+model <- lm(Sea_urchins$GSI ~ Sea_urchins$GW + Sea_urchins$TD + Sea_urchins$TW, data = Sea_urchins)
+# vif(model) --> returned an error "aliased coefficients in the model" so had to remove TW
+
+# VIF of TW is highest (14.2) so removing that variable
+
+model <- lm(Sea_urchins$GSI ~ Sea_urchins$GW + Sea_urchins$TD, data = Sea_urchins)
+vif(model)
+
+# VIF of GW and TD are now both less than 3 so this step is complete
+
+result="hide"
+fig.show ="hide"
+```
+
+
+Step 5 Conclusion: had to drop TW to reduce collinearity among the covariates
+
+
+
+
+# Step 6: What are the relationships between x and y variables?
+
+```{r}
+# Plot response vs. each covariate
+
+plot(Sea_urchins$GSI ~ Sea_urchins$GW)
+plot(Sea_urchins$GSI ~ Sea_urchins$TD)
+
+result="hide"
+fig.show ="hide"
+```
+
+Step 6 Conclusions: GW and GSI show a positive non-linear relationship, as do TD and GSI
+
+
+
+# Step 7: Should we consider interactions?
+
+```{r}
+# Coplot
+
+coplot(GSI ~ TD | Month, data = Sea_urchins)
+
+result="hide"
+fig.show ="hide"
+```
+
+Step 7 Conclusion: interactions to be discussed in week 4
+
+
+# Step 8: Are observations of the response variable independent?
+
+```{r}
+plot(Sea_urchins$GSI ~ Sea_urchins$Month)
+
+boxplot(Sea_urchins$GSI ~ Sea_urchins$Month)
+
+result="hide"
+fig.show ="hide"
+```
+
+Step 8 Conclusions: measures do not appear to be repeated, observations appear independent 
+
+
+
+# Would an ANOVA be an appropriate test to examine the research question?
+
+- Unsure because we have a large sample size, but the data isn't normally distributed
+
+
+
+
