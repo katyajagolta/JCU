@@ -1,0 +1,28 @@
+---
+title: "Atlantic Cod"
+output: html_document
+date: "2023-05-09"
+---
+
+```{r}
+SSB <- read_excel("~/Desktop/Atlantic Cod SSB.xlsx")
+```
+
+
+```{r}
+library(tidyverse)
+as.numeric(SSB$`SSB (mt)`)
+```
+
+
+```{r}
+ggplot(SSB) +
+  geom_point(aes(x = Year, y = `SSB (mt)`, color = Stock)) + 
+  geom_line(aes(x = Year, y = `SSB (mt)`, color = Stock)) +
+  labs(title = "Spawning stock biomass (SSB) of Atlantic cod stocks") +
+  theme_bw()
+
+```
+
+
+

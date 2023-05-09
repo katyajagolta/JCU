@@ -6,9 +6,6 @@ output: html_document
 date: "2023-05-02"
 ---
 
-Workspace: 
-~/MB5370 Techniques in Mar Sci 1/MB5370 Module 4.Rmd
-
 ## Learning outcomes:
 1. Learning plotting in detail using ggplot2
 2. Learning reproducible science with Git/Github
@@ -353,8 +350,7 @@ homelessness_summary <- homelessness %>%
   filter(Type == "state")
 ```
 
-# NOTES!!! REORDER BARS FROM HIGHEST TO LOWEST CHANGE
-# CHANGE US AVERAGE TO A LINE ACROSS ALL OF THEM, NOT ITS OWN BAR
+
 ```{r}
 ggplot(data = homelessness_summary) +
   geom_bar(mapping = aes(x = reorder(State, -Difference), y = Difference, fill = "F8766D"), stat = "identity") +

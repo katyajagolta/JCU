@@ -6,10 +6,6 @@ output: html_document
 date: "2023-05-02"
 ---
 
-Workspace: 
-~/MB5370 Techniques in Mar Sci 1/MB5370 Module 4.Rmd
-
-
 # Workshop 2: Using ggplot2 for Communication
 
 ```{r}
