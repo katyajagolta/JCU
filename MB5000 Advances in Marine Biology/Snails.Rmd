@@ -62,7 +62,6 @@ ggplot(snail_count, aes(x = Zone, y = mean)) +
 ```
 
 
-
 ```{r}
 library(tidyverse)
 

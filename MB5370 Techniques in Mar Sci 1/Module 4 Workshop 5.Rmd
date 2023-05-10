@@ -1,0 +1,210 @@
+---
+title: "Module 4 Workshop 5"
+output: html_document
+date: "2023-05-10"
+---
+
+# Workshop 5: Spatial data in R
+
+```{r}
+library(tidyverse)
+library(sf) # simple features
+library (terra) # for raster
+library(tmap) # Thematic maps are geographical maps in which spatial data distributions are visualized
+library(readr)
+library(ggplot2)
+```
+
+
+## 6.6 Loading the spatial dataset
+
+```{r}
+dat <- read_csv("data/copepods_raw.csv")
+dat
+```
+
+
+## 6.7 Data exploration
+
+### 6.7.1 Check coordinates
+
+```{r}
+ggplot(dat) +
+  aes(x = longitude, y = latitude, color = richness_raw) +
+  geom_point()
+# NOT a map since it doesn't have a projection! Just a scatterplot, but a nice quick way to look at spatial data
+```
+
+```{r}
+# Plot richness by latitude 
+ggplot(dat, aes(x = latitude, y = richness_raw)) + 
+  stat_smooth() + 
+  geom_point()
+```
+
+
+## 6.8 Getting going with maps
+
+```{r}
+# Use sf package (simple features) to turn point data into a spatially referenced dataframe 
+
+sdat <- st_as_sf(dat, coords = c("longitude", "latitude"),
+                 crs = 4326)
+# st_as_sf: converts different data types to simple features
+# dat: our original data 
+# coords: gives the names of the columns that relate to the spatial coordinates (in order of X coord followed by Y coord)
+# crs: coordinate reference system
+```
+
+Simple feature: like a shapefile in that it holds a lot of data in columns and rows, but it's spatially aware - extra columns regarding each rows position (in coordinates) and metadata about the coordinate reference system, the type of geometry (point) and so on.
+
+## 6.9 Coordinate reference systems
+
+- A datum = the reference point
+- An ellipsoid = the lumpy spherical earth model
+- Geographic coordinate reference system (GCS): combines the datum & ellipsoid to tell you coordinates of a location
+- EPSG code: a short code for a specific coordinate reference system
+- WKT (Well-known text): like the EPSG, a WKT can also be used to define a CRS but with a lot more detailed information
+
+- WGS84: a common "one size fits all" GCS with EPSG = 4326 (input in the code above as crs = 4326)
+
+
+```{r}
+crs4326 <- st_crs(4326)
+crs4326 # Look at the whole CRS
+crs4326$Name # Pull out just the name of the crs
+```
+
+```{r}
+crs4326$wkt # Crs in well-known text format
+```
+
+
+## 6.10 Feature collection (points)
+
+```{r}
+sdat
+# Looks much like dat, but now has a geometry column too that stores coordinates (one point for each data row) 
+```
+
+## 6.11 Cartography
+
+```{r}
+plot(sdat["richness_raw"]) # Plots the richness column
+plot(sdat) # Creates a panel for every variable in the dataframe
+```
+
+
+## 6.12 Thematic maps for communication
+
+```{r}
+# Using tmap:
+
+tm1 <- tm_shape(sdat) +
+  tm_dots(col = "richness_raw") # Plots dots of the coordinates with richness as the color scale
+
+# Other plotting options: tm_polygons, tm_symbols, etc.
+```
+
+```{r}
+tmap_save(tm1, filename = "Richness-map.png", 
+          width = 600, height = 600)
+```
+
+The data above was a csv file with coordinate columns; below, the polygons in the copepod data are stored as shapefiles
+
+
+## 6.13 Mapping spatial polygons as layers
+
+### 6.13.1 Loading shapefiles
+
+```{r}
+aus <- st_read("data/spatial-data/Aussie/Aussie.shp")
+shelf <- st_read("data/spatial-data/aus_shelf/aus_shelf.shp")
+regions <- st_read("data/spatial-data/regions/regions.shp")
+SST <- rast("data/spatial-data/MeanAVHRRSST/MeanAVHRRSST.grd")
+```
+
+
+```{r}
+# Check out the data:
+aus
+shelf
+regions
+SST
+```
+
+
+```{r}
+plot(SST)
+```
+
+
+### 6.13.2 Mapping your polygons
+
+```{r}
+# tmap makes it very straightforward to make a map of polygons:
+tm_shape(shelf) +
+  tm_polygons()
+```
+
+```{r}
+tm_shape(shelf, bbox = sdat) +
+  tm_polygons() +
+  tm_shape(aus) + 
+  tm_polygons() + 
+  tm_shape(sdat) + 
+  tm_dots()
+```
+
+
+```{r}
+plot(SST)
+```
+
+
+## 6.14 Exploring t_map
+
+```{r}
+tmap_mode("plot") # Can toggle between plot (still map) and view (interactive map)
+
+tm_shape(SST) +
+  tm_raster(title = "SST", palette = "-RdBu") +
+  
+  tm_shape(regions) +
+  tm_polygons(col = "region", palette = "Set2") +
+  
+  tm_shape(shelf, bbox = sdat) +
+  tm_polygons(col = "turquoise") +
+  
+  tm_shape(aus) + 
+  tm_polygons(col = "lightgreen") + 
+  
+  tm_shape(sdat) + 
+  tm_dots(col = "richness_raw", palette = "-viridis")
+```
+
+```{r}
+tmap_mode("plot") # Can toggle between plot (still map) and view (interactive map)
+
+tm2 <- tm_shape(SST) +
+  tm_raster(title = "SST", palette = "viridis", style = "cont") +
+  
+  tm_shape(aus) + 
+  tm_polygons(col = "lightgreen") + 
+  
+  tm_shape(sdat) + 
+  tm_dots(col = "richness_raw", palette = "YlOrRd", title = "Species richness")
+
+tm2
+```
+
+# Cut out blue edges!!!!
+
+```{r}
+tmap_save(tm2, filename = "Richness-map2.png", 
+          width = 2000, height = 2000)
+```
+
+
+

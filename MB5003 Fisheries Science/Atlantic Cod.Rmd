@@ -5,15 +5,12 @@ date: "2023-05-09"
 ---
 
 ```{r}
-SSB <- read_excel("~/Desktop/Atlantic Cod SSB.xlsx")
+library(tidyverse)
 ```
-
 
 ```{r}
-library(tidyverse)
-as.numeric(SSB$`SSB (mt)`)
+SSB <- read_excel("~/Desktop/MB5003 Fisheries Science/Atlantic Cod SSB.xlsx")
 ```
-
 
 ```{r}
 ggplot(SSB) +
