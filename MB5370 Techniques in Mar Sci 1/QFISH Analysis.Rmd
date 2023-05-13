@@ -51,6 +51,24 @@ colnames(SCP)[1] = "Location"
 
 # Data Visualization
 
+```{r}
+# Omit NAs; convert Count & Year to numeric
+SCP2 <- na.omit(SCP)
+SCP2$Count <- as.numeric(as.character(SCP2$Count))
+str(SCP2$Count)
+
+SCP2$Year <- as.numeric(as.character(SCP2$Year))
+str(SCP2$Year)
+```
+
+```{r}
+SCP2 %>%
+  group_by(Year, Type) %>% 
+  summarise(Sum = sum(Count)) %>% 
+  ggplot(aes(x = Year, y = Sum)) +
+  geom_point(aes(color = Type)) +
+  geom_line(aes(color = Type))
+```
 
 
 
