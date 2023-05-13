@@ -1,0 +1,59 @@
+---
+title: "QFISH Analysis"
+output: html_document
+date: "2023-05-12"
+---
+
+```{r}
+library(tidyverse)
+library(readr)
+library(janitor)
+```
+
+
+# Data Wrangling
+
+Import data from QFish, Queensland's Department of Agriculture and Fisheries Database:
+
+```{r}
+# Shark Control Program Data: 
+
+SCP <- read_excel("~/Documents/Github/JCU/MB5370 Techniques in Mar Sci 1/data/Shark_Control_Program.xlsx", 
+    col_names = FALSE)
+```
+
+```{r}
+# Remove columns that are empty or that have totals for each year:
+SCP <- SCP[-c(4, 6, 8, 13, 18, 23, 28, 33, 38, 43, 48, 53, 58, 63, 68, 73, 78, 83, 88, 93, 98, 103, 108, 113, 118, 119)]  
+
+# Combine rows 1 and 2 so that we only have 1 row to pivot:
+SCP[1, ] <- paste(SCP[1, ], SCP[2, ], sep = "_") %>% 
+  as.list()
+
+# Remove row 2
+SCP <- SCP[-2, ]
+
+
+SCP <- SCP %>% 
+  janitor::row_to_names(1) %>% # Make 1st row column names:
+  pivot_longer(2:93, names_to = "Year_Type", values_to = "Count") %>% # Pivot so that Year_Type becomes a column
+  separate(col = Year_Type, into = c('Year', 'Type'), sep = "_") # Separate column Year_Type into two columns
+
+# Rename column 1:
+colnames(SCP)[1] = "Location"
+```
+
+```{r}
+# Remove the "...x" from each column name (took out, but saving code for other situations)
+# names(SCP) <- gsub(x = names(SCP), pattern = "\\...*", replacement = "")
+```
+
+
+# Data Visualization
+
+
+
+
+
+
+
