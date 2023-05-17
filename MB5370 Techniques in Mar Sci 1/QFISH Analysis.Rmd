@@ -11,7 +11,7 @@ library(janitor)
 ```
 
 
-# Data Wrangling
+## Data Wrangling
 
 Import data from QFish, Queensland's Department of Agriculture and Fisheries Database:
 
@@ -69,6 +69,22 @@ SCP2 %>%
   geom_point(aes(color = Type)) +
   geom_line(aes(color = Type))
 ```
+
+```{r}
+SCP2 %>% 
+  subset(Type == "Shark") %>% 
+  ggplot(aes(x = Year, y = Count)) +
+  geom_line(aes(color = Location))
+```
+
+
+```{r}
+SCP2 %>% 
+  subset(Type == "Shark") %>% 
+  ggplot(aes(x = Location, y = Count)) +
+  geom_col(aes(fill = Location))
+```
+
 
 
 

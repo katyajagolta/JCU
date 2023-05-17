@@ -6,8 +6,146 @@ date: "2023-05-04"
 
 
 ```{r}
-
+library(tidyverse)
+library(readr)
+library(janitor)
+library(readxl)
 ```
+
+
+# Assignment 1: Plot Deconstruction
+
+Import data: 
+(Note: rate of homelessness is x out of 10,000 people)
+
+Initial graph: 
+- Did not have units
+- Did not read easily 
+- Said it represents the 10 states with the highest rates of homelessness but really showed 12
+- Showed that the average rate of homelessness in the US decreased, while the article claimed that the rate had increased (article title: "America’s homeless population rises for first time in years")
+- Is no longer found in the original article - maybe they realized it does not support the argument that the article is making
+
+```{r}
+homelessness <- read_excel("~/Desktop/MB5370 Techniques 1/MB5370 Module 4 Homelessness.xlsx")
+```
+
+Group by state and find the difference in homelessness rate from 2015 to 2017
+
+```{r}
+homelessness_summary <- homelessness %>% 
+  group_by(State) %>% 
+  mutate(Difference = `2017 Homelessness Rate` - `2015 Homelessness Rate`) %>% 
+  filter(Type == "state")
+```
+
+
+```{r}
+ggplot(data = homelessness_summary) +
+  geom_bar(mapping = aes(x = reorder(State, -Difference), y = Difference, fill = "F8766D"), stat = "identity") +
+  labs(x = "State", y = "Change per 10,000 people", title = "Change in homelessness from 2015 to 2017", caption = "Includes the 12 U.S. states with the highest rates of homelessness.
+Values represent an increase or decrease in the number of homeless people per 10,000.") +
+  theme_light() +
+  theme(axis.text.x = element_text(angle = -45, hjust = 0), plot.caption = element_text(hjust = 0)) +
+  geom_hline(aes(yintercept = -0.3, linetype = "U.S. Average"), color = "blue") +
+  scale_linetype_manual(name = " ", values = c(1)) +
+  guides(fill = FALSE)
+```
+```{r}
+ggsave("Change in Homelessness.pdf", width = 7, height = 5)
+```
+
+
+
+
+# Assignment 2: QFish Analysis
+
+
+## Data Wrangling
+
+Import data from QFish, Queensland's Department of Agriculture and Fisheries Database:
+
+```{r}
+# Shark Control Program Data: 
+
+SCP <- read_excel("~/Documents/Github/JCU/MB5370 Techniques in Mar Sci 1/data/Shark_Control_Program.xlsx", 
+    col_names = FALSE)
+```
+
+```{r}
+# Remove columns that are empty or that have totals for each year:
+SCP <- SCP[-c(4, 6, 8, 13, 18, 23, 28, 33, 38, 43, 48, 53, 58, 63, 68, 73, 78, 83, 88, 93, 98, 103, 108, 113, 118, 119)]  
+
+# Combine rows 1 and 2 so that we only have 1 row to pivot:
+SCP[1, ] <- paste(SCP[1, ], SCP[2, ], sep = "_") %>% 
+  as.list()
+
+# Remove row 2
+SCP <- SCP[-2, ]
+
+
+SCP <- SCP %>% 
+  janitor::row_to_names(1) %>% # Make 1st row column names:
+  pivot_longer(2:93, names_to = "Year_Type", values_to = "Count") %>% # Pivot so that Year_Type becomes a column
+  separate(col = Year_Type, into = c('Year', 'Type'), sep = "_") # Separate column Year_Type into two columns
+
+# Rename column 1:
+colnames(SCP)[1] = "Location"
+```
+
+```{r}
+# Remove the "...x" from each column name (took out, but saving code for other situations)
+# names(SCP) <- gsub(x = names(SCP), pattern = "\\...*", replacement = "")
+```
+
+
+## Data Visualization
+
+```{r}
+# Omit NAs; convert Count & Year to numeric
+SCP2 <- na.omit(SCP)
+SCP2$Count <- as.numeric(as.character(SCP2$Count))
+str(SCP2$Count)
+
+SCP2$Year <- as.numeric(as.character(SCP2$Year))
+str(SCP2$Year)
+```
+
+```{r}
+# GET RID OF GRAND TOTAL (currently listed as a location, but it's not)
+SCP2 <- SCP2 %>% filter(Location != "Grand Total")
+```
+
+```{r}
+SCP2 %>%
+  group_by(Year, Type) %>% 
+  summarise(Sum = sum(Count)) %>% 
+  ggplot(aes(x = Year, y = Sum)) +
+  geom_line(aes(color = Type)) +
+  theme_light()
+```
+
+```{r}
+SCP2 %>% 
+  subset(Type == "Shark") %>% 
+  ggplot(aes(x = Year, y = Count)) +
+  geom_line(aes(color = Location)) +
+  theme_light()
+```
+
+
+```{r}
+SCP2 %>% 
+  subset(Type == "Shark") %>% 
+  ggplot(aes(x = reorder(Location, -Count), y = Count)) +
+  geom_col(aes(fill = Location)) +
+  theme_light() +
+  theme(axis.text.x = element_text(angle = -45, hjust = 0), legend.position = "none")
+```
+
+
+
+
+
 
 
 
