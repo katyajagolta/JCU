@@ -1,11 +1,14 @@
 ---
-title: "Module 4 Report"
+title: "MB5370 Module 4: Data Science"
+author: Katya Jagolta
+Affiliation: James Cook University
 output: html_document
 date: "2023-05-04"
 ---
 
 
-```{r}
+```{r setup, include=FALSE} 
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
 library(tidyverse)
 library(readr)
 library(janitor)
@@ -15,21 +18,31 @@ library(readxl)
 
 # Assignment 1: Plot Deconstruction
 
-Import data: 
-(Note: rate of homelessness is x out of 10,000 people)
+Initial graph (seen below): 
 
-Initial graph: 
-- Did not have units
-- Did not read easily 
-- Said it represents the 10 states with the highest rates of homelessness but really showed 12
-- Showed that the average rate of homelessness in the US decreased, while the article claimed that the rate had increased (article title: "America’s homeless population rises for first time in years")
-- Is no longer found in the original article - maybe they realized it does not support the argument that the article is making
+1. Did not have units (after some research, found that the rate of homelessness is x out of 10,000 people)
+
+2. Did not read easily 
+
+3. Said it represents the 10 states with the highest rates of homelessness but really showed 12
+
+4. Showed that the average rate of homelessness in the US decreased, while the article claimed that the rate had increased (article title: "America’s homeless population rises for first time in years")
+
+5. Is no longer found in the original article - maybe they realized it does not support the argument that the article is making
+
+![Figure 1. Initial graph showing the changes in rates of homelessness in 12 U.S. states. Source: https://getdolphins.com/blog/the-worst-graphs-of-2017/.](figs/Homelessness_Original.png)
+
+
+### Import and wrangle data:
+
+Import data: 
 
 ```{r}
 homelessness <- read_excel("~/Desktop/MB5370 Techniques 1/MB5370 Module 4 Homelessness.xlsx")
 ```
 
-Group by state and find the difference in homelessness rate from 2015 to 2017
+
+Group by state and find the difference in homelessness rate from 2015 to 2017:
 
 ```{r}
 homelessness_summary <- homelessness %>% 
@@ -38,29 +51,23 @@ homelessness_summary <- homelessness %>%
   filter(Type == "state")
 ```
 
+### Data visualization:
 
-```{r}
+```{r, fig.cap= "Figure 2. Change in rates of homelessness in the United States from 2015 to 2017. Includes the 12 states with the highest rates of homelessness. Values represent an increase or decrease in the number of homeless people per 10,000 people. Blue line represents the average change in homelessness across the U.S. Data source: https://getdolphins.com/blog/the-worst-graphs-of-2017/"}
 ggplot(data = homelessness_summary) +
   geom_bar(mapping = aes(x = reorder(State, -Difference), y = Difference, fill = "F8766D"), stat = "identity") +
-  labs(x = "State", y = "Change per 10,000 people", title = "Change in homelessness from 2015 to 2017", caption = "Includes the 12 U.S. states with the highest rates of homelessness.
-Values represent an increase or decrease in the number of homeless people per 10,000.") +
+  labs(x = "State", y = "Change per 10,000 people", title = "Change in homelessness from 2015 to 2017") +
   theme_light() +
   theme(axis.text.x = element_text(angle = -45, hjust = 0), plot.caption = element_text(hjust = 0)) +
   geom_hline(aes(yintercept = -0.3, linetype = "U.S. Average"), color = "blue") +
   scale_linetype_manual(name = " ", values = c(1)) +
   guides(fill = FALSE)
 ```
-```{r}
-ggsave("Change in Homelessness.pdf", width = 7, height = 5)
-```
-
-
 
 
 # Assignment 2: QFish Analysis
 
-
-## Data Wrangling
+### Data Wrangling
 
 Import data from QFish, Queensland's Department of Agriculture and Fisheries Database:
 
@@ -82,7 +89,6 @@ SCP[1, ] <- paste(SCP[1, ], SCP[2, ], sep = "_") %>%
 # Remove row 2
 SCP <- SCP[-2, ]
 
-
 SCP <- SCP %>% 
   janitor::row_to_names(1) %>% # Make 1st row column names:
   pivot_longer(2:93, names_to = "Year_Type", values_to = "Count") %>% # Pivot so that Year_Type becomes a column
@@ -91,14 +97,6 @@ SCP <- SCP %>%
 # Rename column 1:
 colnames(SCP)[1] = "Location"
 ```
-
-```{r}
-# Remove the "...x" from each column name (took out, but saving code for other situations)
-# names(SCP) <- gsub(x = names(SCP), pattern = "\\...*", replacement = "")
-```
-
-
-## Data Visualization
 
 ```{r}
 # Omit NAs; convert Count & Year to numeric
@@ -111,35 +109,33 @@ str(SCP2$Year)
 ```
 
 ```{r}
-# GET RID OF GRAND TOTAL (currently listed as a location, but it's not)
+# Get rid of grand total (currently listed as a location, but it is not one; it's the total of all of them)
 SCP2 <- SCP2 %>% filter(Location != "Grand Total")
 ```
 
-```{r}
+
+### Data Visualization
+
+```{r, fig.cap = "Figure 3. Total annual catch of sharks and non-target species in the Queensland Shark Control Program from 2001-2023 (2023 still in progress). Data sourced from the QLD Department of Agriculture and Fisheries QFish database (https://qfish.fisheries.qld.gov.au)."}
 SCP2 %>%
   group_by(Year, Type) %>% 
   summarise(Sum = sum(Count)) %>% 
   ggplot(aes(x = Year, y = Sum)) +
   geom_line(aes(color = Type)) +
-  theme_light()
-```
-
-```{r}
-SCP2 %>% 
-  subset(Type == "Shark") %>% 
-  ggplot(aes(x = Year, y = Count)) +
-  geom_line(aes(color = Location)) +
-  theme_light()
+  geom_point(aes(color = Type)) +
+  theme_light() +
+  labs(y = "Total number caught", title = "Catch by year and megafauna type")
 ```
 
 
-```{r}
+```{r, fig.cap = "Figure 4. Total sharks caught by location in the QLD Shark Control Program since 2001. Data sourced from the QLD Department of Agriculture and Fisheries QFish database (https://qfish.fisheries.qld.gov.au)."}
 SCP2 %>% 
   subset(Type == "Shark") %>% 
   ggplot(aes(x = reorder(Location, -Count), y = Count)) +
   geom_col(aes(fill = Location)) +
   theme_light() +
-  theme(axis.text.x = element_text(angle = -45, hjust = 0), legend.position = "none")
+  theme(axis.text.x = element_text(angle = -45, hjust = 0), legend.position = "none") +
+  labs(x = "Location", y = "Total sharks caught", title = "Shark catch by location")
 ```
 
 
